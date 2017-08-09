@@ -1,0 +1,28 @@
+<AirBook xmlns:i='http://www.w3.org/2001/XMLSchema-instance' xmlns='http://schemas.datacontract.org/2004/07/ServiceModel.Request'>
+						<FareSourceCode>353338333930263339263232303636</FareSourceCode>
+						<SessionId>6b5061d8-ffed-e611-80f8-b083fedbcc7e</SessionId>
+						<TravelerInfo xmlns:d2p1='http://schemas.datacontract.org/2004/07/ServiceModel.Entities'>
+							<d2p1:AirTravelers>
+								<d2p1:AirTraveler>
+											<d2p1:DateOfBirth>1990-02-21T00:00:00</d2p1:DateOfBirth>
+											
+											<d2p1:Gender>Male</d2p1:Gender>
+											
+											<d2p1:Nationality>IR</d2p1:Nationality>
+											<d2p1:PassengerName>
+												<d2p1:PassengerFirstName>dsfsdf</d2p1:PassengerFirstName>
+												<d2p1:PassengerLastName>dfsdf</d2p1:PassengerLastName>
+												<d2p1:PassengerTitle>Mr</d2p1:PassengerTitle>
+											</d2p1:PassengerName>
+											<d2p1:PassengerType>Adt</d2p1:PassengerType>
+											<d2p1:Passport>
+												<d2p1:Country>IR</d2p1:Country>
+												<d2p1:ExpiryDate>2020-02-12T00:00:00</d2p1:ExpiryDate>
+												<d2p1:PassportNumber>dsfsd434234</d2p1:PassportNumber>
+											</d2p1:Passport>
+										</d2p1:AirTraveler>
+							</d2p1:AirTravelers>
+								<d2p1:Email>dsfdsf@gmail.com</d2p1:Email>
+								<d2p1:PhoneNumber>+9605824515</d2p1:PhoneNumber>
+						</TravelerInfo>
+					</AirBook>

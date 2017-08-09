@@ -1,0 +1,10 @@
+/****************************
+*Custom.css                 * 
+*Author : Pandiyan			*
+*Usage  : Default CSS 		*
+***************************/
+.error, .login_error{color: RED;}
+.success{color: GREEN;}
+label.error{color: RED;font-variant: normal;}
+.fa_content{font-family: "WYekan";font-size:12px;}
+.highlight_text{font-weight:bolder;font-size:1.2em;color:green;}

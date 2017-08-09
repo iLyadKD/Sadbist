@@ -1,0 +1,21 @@
+<HotelValuedAvailRQ echoToken='DummyEchoToken' sessionId='1467280457' xmlns='http://www.hotelbeds.com/schemas/2005/06/messages' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.hotelbeds.com/schemas/2005/06/messages HotelValuedAvailRQ.xsd' showDiscountsList='Y' version='2011/01'>
+						<Language>ENG</Language>
+						<Credentials>
+							<User>ALKAMILECAE213959</User>
+							<Password>ALKAMILECAE213959</Password>
+						</Credentials>
+						<PaginationData itemsPerPage='999' pageNumber='1'/>
+						<CheckInDate date='20160701'/>
+						<CheckOutDate date='20160702'/>
+						<Destination code='LON' type='SIMPLE'/>
+						<OccupancyList>
+								<HotelOccupancy>
+								<RoomCount>1</RoomCount>
+									<Occupancy>
+										<AdultCount>1</AdultCount>
+										<ChildCount>0</ChildCount>
+										</Occupancy>
+								</HotelOccupancy>
+								 
+						</OccupancyList>
+					</HotelValuedAvailRQ>

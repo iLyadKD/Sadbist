@@ -1,0 +1,4 @@
+User: 31.214.253.3 - May 16, 2017, 12:06 pm
+ResponseCode: 0
+Data: {"RefId":"968CF628778C1C93","ResCode":"0","SaleOrderId":"1494920058","SaleReferenceId":"124086789842","CardHolderInfo":"BA091AA2219E53A65CCD591FC3DAB9E48235CE3A43D483AC28BBEC9EFFC4D12F","CardHolderPan":"502229******6264"}
+-------------------------

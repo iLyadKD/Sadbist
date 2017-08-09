@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+<meta charset=utf-8 />
+<title>JS Bin</title>
+</head>
+<body>
+  
+  <div id="loader" class="circle ab bgcolor-1 c">
+    <div id="s" class="circle  ab bcolor-1 bgcolor-1 c1-o ">
+      <div class="bar ab bgcolor-1 b-1">
+      </div>
+      <div class="bar ab bgcolor-1 b-2">
+      </div>
+      <div class="bar ab bgcolor-1 b-3">
+      </div>
+    </div>
+    <div id="d" class="circle ab c1-o ">
+      <div id="c1-1" class="circle ab bcolor-2 bgcolor-2 c1-i t">
+      </div>
+      <div id="c2-1" class="circle ab bcolor-2 bgcolor-2 c2-i t">
+      </div>  
+      <div id="c3-1" class="circle ab bcolor-2 bgcolor-2 c3-i t">
+      </div> 
+    </div>
+  </div>
+  
+</body>
+</html>

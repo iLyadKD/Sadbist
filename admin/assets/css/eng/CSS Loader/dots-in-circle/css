@@ -1,0 +1,57 @@
+        	.loader {
+	        	width: 50px;
+	        	height: 50px;
+	        	border-radius: 100%;
+	        	background: #fff;
+	        	position: absolute;
+	        	left: 50%;
+	        	top: 50%;
+	        	margin: -25px 0 0 -25px;
+        	}
+        	.mask {
+	        	width: 30px;
+	        	height: 30px;
+	        	top: 10px;
+	        	left: 10px;
+	        	background: #003a70;
+	        	position: absolute;
+	        	border-radius: 100%;
+        	}
+        	.dot {
+	        	width: 6px;
+	        	height: 6px;
+	        	background: #003a70;
+	        	position: absolute;
+	        	border-radius: 100%;
+	        	left: 22px;
+	        	top: 2px;
+	        	-webkit-transform-origin-y:  23px;
+	        	-webkit-animation: dot 2000ms infinite ease-out;
+        	}
+        	.two { -webkit-animation-delay: 150ms; }
+        	.three { -webkit-animation-delay: 600ms; }
+        	.four { -webkit-animation-delay: 700ms; }
+        	.five { -webkit-animation-delay: 1200ms; }
+        	.six { -webkit-animation-delay: 1300ms; }
+        	@-webkit-keyframes dot {
+	        	0% {
+		        	-webkit-transform: rotateZ(0deg);
+	        	}
+	        	100% {
+		        	-webkit-transform: rotateZ(360deg);
+	        	}
+        	}
+a {
+display: block;
+width: 100px;
+height: 30px;
+text-align:center;
+color: #fff;
+font-size: 11px;
+font-family: Helvetica, Arial;
+text-decoration: none;
+position: absolute;
+top: 50%;
+left: 50%;
+margin: 40px 0 0 -50px;
+}

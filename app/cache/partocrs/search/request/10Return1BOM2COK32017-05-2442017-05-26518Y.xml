@@ -1,0 +1,27 @@
+<AirLowFareSearch xmlns:i='http://www.w3.org/2001/XMLSchema-instance' xmlns='http://schemas.datacontract.org/2004/07/ServiceModel.Request'>
+						<AdultCount>1</AdultCount>
+						<ChildCount>0</ChildCount>
+						<InfantCount>0</InfantCount>
+						<NearByAirports>true</NearByAirports>
+						<OriginDestinationInformations xmlns:d2p1='http://schemas.datacontract.org/2004/07/ServiceModel.Entities'>
+							<d2p1:OriginDestinationInformation>
+												<d2p1:DepartureDateTime>2017-05-24T00:00:00</d2p1:DepartureDateTime>
+												<d2p1:DestinationLocationCode>COK</d2p1:DestinationLocationCode>
+												<d2p1:OriginLocationCode>BOM</d2p1:OriginLocationCode>
+											</d2p1:OriginDestinationInformation>
+											<d2p1:OriginDestinationInformation>
+												<d2p1:DepartureDateTime>2017-05-26T00:00:00</d2p1:DepartureDateTime>
+												<d2p1:DestinationLocationCode>BOM</d2p1:DestinationLocationCode>
+												<d2p1:OriginLocationCode>COK</d2p1:OriginLocationCode>
+											</d2p1:OriginDestinationInformation>
+						</OriginDestinationInformations>
+						<PricingSourceType>All</PricingSourceType>
+						<RequestOption>All</RequestOption>
+						<SessionId>0733f940-5f40-e711-8103-b083fedbcc7e</SessionId>
+						<TravelPreference xmlns:d2p1='http://schemas.datacontract.org/2004/07/ServiceModel.Entities'>
+							<d2p1:AirTripType>Return</d2p1:AirTripType>
+							<d2p1:CabinType>Y</d2p1:CabinType>
+							<d2p1:MaxStopsQuantity>All</d2p1:MaxStopsQuantity>
+							
+						</TravelPreference>
+					</AirLowFareSearch>

@@ -1,0 +1,16 @@
+User: 14.141.47.106 - March 6, 2017, 8:14 am
+ResponseCode: 
+Data: []
+-------------------------
+User: 14.141.47.106 - March 6, 2017, 8:17 am
+ResponseCode: 17
+Data: {"RefId":"9AB0D0B1A09EA838","ResCode":"17","SaleOrderId":"1488775628","SaleReferenceId":"","CardHolderInfo":"","CardHolderPan":""}
+-------------------------
+User: 14.141.47.106 - March 6, 2017, 8:21 am
+ResponseCode: 17
+Data: {"RefId":"DEEBC61A987BF00A","ResCode":"17","SaleOrderId":"1488775866","SaleReferenceId":"","CardHolderInfo":"","CardHolderPan":""}
+-------------------------
+User: 91.99.60.206 - March 6, 2017, 11:03 am
+ResponseCode: 0
+Data: {"RefId":"D3D5AF850C09E279","ResCode":"0","SaleOrderId":"1488785426","SaleReferenceId":"122597462192","CardHolderInfo":"3B47158CFFFDDB5AA3A9C8F42036605E4D9471533C86618046B07FB2C9CC4AFE","CardHolderPan":"621986******6545"}
+-------------------------

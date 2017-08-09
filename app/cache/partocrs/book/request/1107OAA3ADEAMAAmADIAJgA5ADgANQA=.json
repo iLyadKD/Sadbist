@@ -1,0 +1,26 @@
+<AirBook xmlns:i='http://www.w3.org/2001/XMLSchema-instance' xmlns='http://schemas.datacontract.org/2004/07/ServiceModel.Request'>
+						<FareSourceCode>OAA3ADEAMAAmADIAJgA5ADgANQA=</FareSourceCode>
+						<SessionId>4a388512-5daa-4404-b7a8-930a767eb66d</SessionId>
+						<TravelerInfo xmlns:d2p1='http://schemas.datacontract.org/2004/07/ServiceModel.Entities'>
+							<d2p1:AirTravelers>
+								<d2p1:AirTraveler><d2p1:NationalId>12345678</d2p1:NationalId>
+											<d2p1:DateOfBirth>1991-04-28T00:00:00</d2p1:DateOfBirth>
+											<d2p1:Gender>Male</d2p1:Gender>
+											<d2p1:PassengerName>
+												<d2p1:PassengerFirstName>Mayur</d2p1:PassengerFirstName>
+												<d2p1:PassengerLastName>Singh</d2p1:PassengerLastName>
+												<d2p1:PassengerTitle>Mr</d2p1:PassengerTitle>
+											</d2p1:PassengerName>
+											<d2p1:PassengerType>Adt</d2p1:PassengerType>
+											<d2p1:Passport>
+												<d2p1:Country>IR</d2p1:Country>
+												<d2p1:ExpiryDate>2019-06-08T00:00:00</d2p1:ExpiryDate>
+												<d2p1:PassportNumber>12345778</d2p1:PassportNumber>
+											</d2p1:Passport>
+										</d2p1:AirTraveler>
+									</d2p1:AirTravelers><d2p1:AreaCode>21</d2p1:AreaCode>
+									<d2p1:CountryCode>0098</d2p1:CountryCode>
+									<d2p1:Email></d2p1:Email>
+									<d2p1:PhoneNumber></d2p1:PhoneNumber>
+						</TravelerInfo>
+					</AirBook>

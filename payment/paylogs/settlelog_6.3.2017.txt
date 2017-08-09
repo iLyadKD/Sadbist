@@ -1,0 +1,4 @@
+User: 91.99.60.206 - March 6, 2017, 11:03 am
+Data: "0"
+DataPGRes: {"RefId":"D3D5AF850C09E279","ResCode":"0","SaleOrderId":"1488785426","SaleReferenceId":"122597462192","CardHolderInfo":"3B47158CFFFDDB5AA3A9C8F42036605E4D9471533C86618046B07FB2C9CC4AFE","CardHolderPan":"621986******6545"}
+-------------------------

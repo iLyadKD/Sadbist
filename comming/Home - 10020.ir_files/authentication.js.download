@@ -1,0 +1,476 @@
+/****************************
+*authentication.js          * 
+*Author : Pandiyan			*
+*Usage  : User Module 		*
+***************************/
+require(["bootstrap"], function(){
+	// Deafult Variables
+	var touch = false;
+	var base_url = $("head").data("base-url");
+	var file_ext = $("head").data("file-ext");
+	var controller = $("head").data("controller");
+	var method = $("head").data("method");
+	var default_forgot = null;
+	var current_controller = $("head").data("controller");
+	
+	/*var complete_url = base_url+controller+'/'+method;
+	if ((controller == 'hotel' && method == 'index') || (controller == 'tour' && method == 'prebooking')) {
+        complete_url = base_url;
+    }*/
+		if($("form#user_edit").length > 0) {
+			$("#user_edit").validate();
+		}
+
+	if($("form.user_login").length > 0) {
+
+		$(document).on("submit", "form.user_login", function()
+		{
+			
+				var cur_form = $(this);
+				var username = $(this).find("input[name='email_id']").val();
+				var form_data = new FormData(cur_form[0]);
+				var flag = $("#booknow").val();
+				var url = base_url + "b2c/login" + file_ext;
+				$.ajax(
+				{
+					url: url,
+					method: "POST",
+					dataType: "JSON",
+					data: form_data,
+					processData: false,
+					contentType:false,
+					beforeSend: function()
+					{
+						cur_form.find(".login_error").html("");
+						$(".wait_loader").html("<div class='full-center'><div class='spinner-clock'><div class='spinner-clock-hour'></div><div class='spinner-clock-minute'></div></div><h2 class='mb5'>user credentails being verified..</h2><p class='text-bigger'>it will take a couple of seconds</p></div>");
+						$(".wait_loader").show();
+					},
+					success: function(response)
+					{
+						if(response.status === "true"){
+							if (flag == 0) {
+                               // window.location.href = base_url;
+                               window.location.reload();
+                            }else{
+								$("#book_now").submit();
+							}
+							
+						}
+						else if(response.status === "verify")
+						{
+							$(".wait_loader").html("");
+							$(".wait_loader").hide();
+							cur_form.children("div:eq(0)").slideUp("slow", function()
+							{
+								cur_form.html('<div class="col-md-12" style="display:none;"><div class="login_error"></div><div class="mn-login form-group"><label class="control-label">Verification Code</label><div class="controls"><input autocomplete="off" class="form-control valid" name="verification_code" type="text" placeholder="Verification Code" data-rule-required="true" data-msg-required="Please enter verification code received by email."></div></div><div class="mn-login"><button class="btn-1" type="submit">Verify</button></div></div>');
+								cur_form.children("div:eq(0)").slideDown("slow");
+								cur_form.removeClass("b2b_login_form").addClass("b2b_secure_login_form").data("user", response.id);
+								$("form.b2b_secure_login_form").validate();
+							});
+						}
+						else
+						{
+							$(".wait_loader").html("");
+							$(".wait_loader").hide();
+							cur_form[0].reset();
+							cur_form.find(".login_error").html(response.msg);
+							cur_form.find("input[name='email_id']").val(username).select().focus();
+						}
+					},
+					error: function(response)
+					{
+						$(".wait_loader").html("");
+						$(".wait_loader").hide();
+						cur_form[0].reset();
+						cur_form.closest(".model").find(".close").trigger("click");
+						$("body").find(".notification").html("<div class='alert alert-block alert-danger alert-dismissable'><a href='javascript:void(0)' data-dismiss='alert' class='alert-close close'>×</a><h4 class='alert-heading'>B2B Login</h4>Sorry, Failed to login. Try agin.</div>");
+						setTimeout(function(){$("body").find(".notification .alert-close").click();}, 3000);
+					}
+				});
+		
+		});
+	}
+
+	if($("form#change_password").length > 0) {
+
+		
+	  $("#change_password").validate({
+	      rules: {
+	        current_password: {
+	          required: true,
+	          minlength: 6
+	        },
+	        new_password: {
+	          required: true,
+	          pwcheckspechars: true,
+	          minlength: 6
+	        },
+	        confirm_password: {
+	          required: true,
+	          minlength: 6,
+	          equalTo: "#new_password"
+	        }   
+	      },
+	      submitHandler: function(form) {
+	         $('#submit').attr('disabled','disabled').attr("value","Please Wait...");
+	         $("#message").html('');
+	            var $form = $(form);
+	            var serializedData = $form.serialize();
+	            var $inputs = $form.find("input");
+	            $inputs.prop("disabled", true);
+	            request = $.ajax({
+	              dataType: "json",
+	              url: base_url + "b2c/update_password"+ file_ext,
+	              type: "post",
+	              data: serializedData
+	            });
+
+	            $inputs.prop("disabled", false);
+	            $('#submit').attr("value","Update Password");
+	            request.done(function (data, textStatus, jqXHR) {
+	             // $("input[type='password']").val("");
+				  if(data.result ==1) { var  mclass= "text-center success"; }else { var  mclass= "error text-center";}
+	              $("#message").html("<p class='"+ mclass +"'> "+data.message + "</p>");
+	              if(data.result ==1) {
+
+	                setTimeout(function() {
+	              		$('.modal').modal('hide');
+	                // window.location.href = base_url + "b2c/logout"+ file_ext;
+	              }, 2000);}
+
+	            });
+	            }
+	    });
+
+
+
+	  $("#cancel_account").validate({
+	      rules: {
+	        acc_password: {
+	          required: true
+	        },  
+	      },
+	      submitHandler: function(form) {
+	         $('#submit').attr('disabled','disabled').attr("value","Please Wait...");
+	            var $form = $(form);
+	            var serializedData = $form.serialize();
+	            var $inputs = $form.find("input");
+	            $inputs.prop("disabled", true);
+	            request = $.ajax({
+	              dataType: "json",
+	              url: base_url + "b2c/cancel_account"+ file_ext,
+	              type: "post",
+	              data: serializedData
+	            });
+	            $inputs.prop("disabled", false);
+	            $('#confirm').attr("value","Confirm");
+	            request.done(function (data, textStatus, jqXHR) {
+	              if(data.result ==1) { var  mclass= "text-center success"; }else { var  mclass= "error text-center";}
+	              $("#confirm_message").html("<p class='"+ mclass +"'> "+data.message + "</p>");
+	              if(data.result ==1) {
+	                setTimeout(function() {
+	                window.location.href =  base_url + "b2c/logout"+ file_ext;
+	              }, 2000);
+	              }
+	            });
+	            }
+	    });
+
+	    $.validator.addMethod("pwcheckspechars", function (value) {
+	        return /[!@#$%^&*()_=\[\]{};':"\\|,.<>\/?+-]/.test(value)
+	    }, "The password must contain at least one special character"); 
+
+	}
+	
+	
+	/***************RESET PWD START***********************/
+	
+	$(document).on('click','.fget_pwd',function(){
+		  $('.b2b_login_model').modal('hide');
+		  $('.b2b_forgot_pwd_model').modal('show');
+		  $('.forgot_pwd').css({'width':'600px'});
+		  if(default_forgot === null)
+		  	default_forgot = $('.b2b_forgot_pwd_model').find("form").children("div:eq(0)").html();
+		  else
+		  	$('.b2b_forgot_pwd_model').find("form").children("div:eq(0)").html(default_forgot);
+	});
+	
+	$('.b2b_forgot_pwd_model').on('hidden.bs.modal', function () {
+		$(".b2b_forgot_pwd_model").find("#form_pwd_reset").removeClass("reset_password_form").addClass("b2c_forgot_password");
+	});
+	
+	$(document).on("submit", "form.b2c_forgot_password", function(e)
+	{
+		if($(this).valid())
+		{
+			var url = base_url+"b2c/forgot_password";
+			var cur_form = $(this);
+			var form_data = new FormData(cur_form[0]);
+			$.ajax(
+			{
+				url: url,
+				method: "POST",
+				dataType: "JSON",
+				data: form_data,
+				processData: false,
+				contentType:false,
+				beforeSend: function()
+				{
+					//show popup
+					//custom_fn.show_loading("Verification code is being sent to mentioned email..", "it will take a couple of seconds");
+				},
+				success: function(response)
+				{
+					//custom_fn.hide_loading();
+					if(response.status === "true")
+					{
+						cur_form.children("div:eq(0)").slideUp("slow", function()
+						{
+							var formdata = "<div class='form-group'>";
+							formdata += "<label class='control-label' for='verification_code'>Enter Verification Code</label>";
+							formdata += "<div class='controls'>";
+							formdata += "<input class='form-control' data-rule-minlength='6' data-rule-required='true' id='verification_code' name='verify' placeholder='Verification Code' type='text'>";
+							formdata += "</div>";
+							formdata += "</div>";
+							formdata += "<div class='form-group'>";
+							formdata += "<label class='control-label' for='validation_password'>New Password</label>";
+							formdata += "<div class='controls'>";
+							formdata += "<input class='form-control' data-rule-minlength='6' data-rule-password='true' data-rule-required='true' id='validation_password' name='newpass' placeholder='New Password' type='password'>";
+							formdata += "</div>";
+							formdata += "</div>";
+							formdata += "<div class='form-group'>";
+							formdata += "<label class='control-label' for='validation_password_confirmation'>Password confirmation</label>";
+							formdata += "<div class='controls'>";
+							formdata += "<input class='form-control' data-rule-equalto='#validation_password' data-msg-equalto='Please re-enter password' data-rule-required='true' id='validation_password_confirmation' name='confirmpass' placeholder='Password confirmation' type='password'>";
+							formdata += "</div>";
+							
+							
+							
+							formdata += "<div class='form-group btn_reset_pwd'>";
+							formdata += "<button class='btn btn-primary' type='submit'>Send</button>";
+							formdata += "</div>";
+							
+							
+							formdata += "</div>";
+							cur_form.children("div:eq(0)").html(formdata);
+							cur_form.children("div:eq(0)").slideDown("slow");
+							cur_form.removeClass("b2c_forgot_password").data("admin", response.admin).addClass("reset_password_form").data("admin", response.id);
+							$("form.reset_password_form").validate();
+						});
+					}
+					else
+					{
+						$('input.reset_email').effect( "shake", { direction: "left", times: 10, distance: 200}, 1500 );
+						$('input.reset_email').val("").prop('placeholder','invalid email address');
+						setTimeout(function(){$('input.reset_email').val("").prop('placeholder','Email Address')}, 4000);
+					}
+				},
+				error: function(response)
+				{
+					//custom_fn.hide_loading();
+					//custom_fn.show_status_msg("danger", "Status", "Sorry, Operation failed.");
+					//custom_fn.set_auto_close(5000);
+				}
+			});
+		}
+	});
+	
+	$(document).on("submit", "form.reset_password_form", function(e)
+	{
+		if($(this).find("input[name]").length === $(this).find("input[name].valid").length)
+		{
+			var url = base_url+"b2c/reset_password";
+			var cur_form = $(this);
+			var form_data = new FormData(cur_form[0]);
+			form_data.append("admin", cur_form.data("admin"));
+			$.ajax(
+			{
+				url: url,
+				method: "POST",
+				dataType: "JSON",
+				data: form_data,
+				processData: false,
+				contentType:false,
+				beforeSend: function()
+				{
+					//show popup
+					//custom_fn.show_loading("verifying and updating password..", "it will take a couple of seconds");
+				},
+				success: function(response)
+				{
+					//custom_fn.hide_loading();
+					if(response.status === "true")
+					{
+						cur_form.children("div:eq(0)").slideUp("slow", function()
+						{
+							var formdata = "<div class='alert alert-block alert-dismissable alert-"+response.msg_status+" forgot_password_msg'>";
+							formdata += "<h4 class='alert-heading'>"+response.title+"</h4>"+response.msg+"</div>";
+							cur_form.find("div:eq(0)").find(".forgot_password_msg").detach();
+							cur_form.find("button[type='submit']").detach();
+							cur_form.children("div:eq(0)").html(formdata);
+							cur_form.children("div:eq(0)").slideDown("slow");
+						});
+					}
+					else
+					{
+						var formdata = "<div class='alert alert-block alert-dismissable alert-"+response.msg_status+" forgot_password_msg'>";
+						formdata += "<a href='javascript:void(0)' data-dismiss='alert' class='notify_close close'>×</a>";
+						formdata += "<h4 class='alert-heading'>"+response.title+"</h4>"+response.msg+"</div>";
+						cur_form.find("div:eq(0)").find(".forgot_password_msg").detach();
+						cur_form.find("div:eq(0)").append(formdata)
+						setTimeout(function(){cur_form.find(".forgot_password_msg .notify_close").click()}, 4000);
+					}
+				},
+				error: function(response)
+				{
+					/*custom_fn.hide_loading();
+					custom_fn.show_status_msg("danger", "Status", "Sorry, Operation failed.");
+					custom_fn.set_auto_close(5000);*/
+				}
+			});
+		}
+	});
+	
+	/***************RESET PWD END***********************/
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+	/*if($("#dob").length > 0) {
+		$("#dob").datepicker({dateFormat: "yy-mm-dd", changeMonth: true,
+        changeYear: true,
+         defaultDate: '1985-01-01',
+         maxDate: 'today',
+         yearRange: '1950:2016',
+        });
+	}	
+
+	if($("#passport_exp").length > 0) {
+		$("#passport_exp").datepicker({dateFormat: "yy-mm-dd", changeMonth: true,
+        changeYear: true,
+       	minDate :0
+        });
+	}	*/
+
+	if($("ul.tabs1").length > 0) {
+		// Wait until the DOM has loaded before querying the document
+		$(document).ready(function(){
+			$('ul.tabs1').each(function(){
+				// For each set of tabs, we want to keep track of
+				// which tab is active and it's associated content
+				var $active, $content, $links = $(this).find('a');
+
+				// If the location.hash matches one of the links, use that as the active tab.
+				// If no match is found, use the first link as the initial active tab.
+				$active = $($links.filter('[href="'+location.hash+'"]')[0] || $links[0]);
+				$active.addClass('active');
+
+				$content = $($active[0].hash);
+
+				// Hide the remaining content
+				$links.not($active).each(function () {
+					$(this.hash).hide();
+				});
+
+				// Bind the click event handler
+				$(this).on('click', 'a', function(e){
+					// Make the old tab inactive.
+					$active.removeClass('active');
+					$content.hide();
+
+					// Update the variables with the new link and content
+					$active = $(this);
+					$content = $(this.hash);
+
+					// Make the tab active.
+					$active.addClass('active');
+					$content.show();
+
+					// Prevent the anchor's default click action
+					e.preventDefault();
+				});
+			});
+		});
+	}
+	
+	if($("form.contact_us").length > 0) {
+		$("form.contact_us").validate();
+	}
+	
+	$(document).on('submit','form.contact_us',function(e){
+			e.preventDefault();
+			if($(this).valid() === true)
+			{
+				var cur_form = $(this);
+				var url = base_url+"static_pages/contact_us";
+				var form_data = new FormData(cur_form[0]);
+				$.ajax(
+				{
+					url: url,
+					method: "POST",
+					dataType: "JSON",
+					data: form_data,
+					processData: false,
+					contentType:false,
+					success: function(response)
+					{
+						console.log(response);
+					},
+					error: function(response)
+					{
+						cur_form[0].reset();
+					}
+				});
+			}
+		
+		
+	});
+
+	if($("form.special_deal_request_form").length > 0) {
+		$("form.special_deal_request_form").validate();
+	}
+	
+	$(document).on('submit','form.special_deal_request_form',function(e){
+			e.preventDefault();
+			$('.spcl_req_label').html('');
+			if($(this).valid() === true)
+			{
+				// var cur_form = $(this);console.log(cur_form);
+				var url = base_url+"general/special_deal_request";
+				var form_data =  $(this).serialize();
+				$.ajax(
+				{
+					url: url,
+					type: "POST",
+					data: form_data,
+					dataType: 'json',
+					success: function(response)
+					{
+						$('.spcl_req_label').html(response.msg)
+						$('form.special_deal_request_form').find('input[type=text],input[type=email]').val('');
+					},
+					error: function(response)
+					{
+						$('form.special_deal_request_form').find('input[type=text],input[type=email]').val('');
+					}
+				});
+			}
+		
+		
+	});
+
+
+
+
+
+});

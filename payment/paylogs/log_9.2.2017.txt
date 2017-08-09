@@ -1,0 +1,8 @@
+User: 14.141.47.106 - February 9, 2017, 10:33 am
+ResponseCode: 17
+Data: {"RefId":"9E776F5E23463470","ResCode":"17","SaleOrderId":"1486623720","SaleReferenceId":"","CardHolderInfo":"","CardHolderPan":""}
+-------------------------
+User: 14.141.47.106 - February 9, 2017, 11:17 am
+ResponseCode: 415
+Data: {"RefId":"C5417E9FE45E0C3E","ResCode":"415","SaleOrderId":"1486623672"}
+-------------------------

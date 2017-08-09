@@ -1,0 +1,8 @@
+User: 91.99.36.167 - March 19, 2017, 5:36 pm
+Data: "0"
+DataPGRes: {"RefId":"7F361146ADCEAC8A","ResCode":"0","SaleOrderId":"1489932334","SaleReferenceId":"122982586024","CardHolderInfo":"3B47158CFFFDDB5AA3A9C8F42036605E4D9471533C86618046B07FB2C9CC4AFE","CardHolderPan":"621986******6545"}
+-------------------------
+User: 37.156.11.172 - March 19, 2017, 6:26 pm
+Data: "0"
+DataPGRes: {"RefId":"7CB055E25042C991","ResCode":"0","SaleOrderId":"1489935161","SaleReferenceId":"122984752056","CardHolderInfo":"881EB3FDD2FEBA1F908A8BCCDC9BCB539D503D08F94F2BCFF693C9231F3FD5F8","CardHolderPan":"502229******3769"}
+-------------------------

@@ -1,0 +1,1191 @@
+require(["async!https://maps.googleapis.com/maps/api/js?key=AIzaSyAEjc4IC_8he4zTPM3Gz95Ekm4lOeXXh0w&v=3.exp&sensor=false&libraries=places"], function()
+{
+	
+	//global variables
+	var touch = false;
+	var base_url = $("head").data("base-url");
+	var controller = $("head").data("controller");
+	var method = $("head").data("method");
+	var logged_in = $("head").data("id");
+	var file_ext = $("head").data("file-ext");
+	var language = $("head").data("language");
+	
+	
+	$(document).ready(function() {
+		if($(".result_bg").length > 0){ 
+			$(".money").each(function(){
+				var input = $(this).html();
+				var cnvrt = money(input);
+				$(this).html(cnvrt);
+			});
+		}
+
+		if($("#tour_room").length > 0){
+			$('#tour_room').on('change', function() {
+				var s ;
+				var room_count = this.value;
+				var passenger = $("#tour_passenger").clone();
+				$(".add_tour_passenger").empty();
+				if(room_count >1 ){	
+					for (var i = 1 ; i < room_count; i++) {		
+					  	s = i+ 1;
+						$(passenger).find( "#room_count" ).html("<br><h3>Rooms " + s + "</h3>" );
+					    passenger.clone().appendTo(".add_tour_passenger");
+		         	}
+		     	}
+			});
+		}
+		
+		
+	if($("form.user_register").length > 0){
+		$('form.user_register').validate();
+		
+	}
+		
+
+	if($("#fromcity").length > 0){
+		if($("select.tour_fromcity").length > 0)
+			{
+				if (method == 'index') {
+                    $(".searchbutton").append('<input type="hidden" id="hid_iod" value="1">');
+					var hid_iod = $("#hid_iod").val();
+                }else{
+					var hid_iod = $("#iod").val();
+				}
+				
+				
+				$(document).on('change','input[type=radio][name=pradio]',function(){
+					var iod = $(this).val();
+					$("#hid_iod").val(iod);
+					hid_iod = $("#hid_iod").val();
+					generate_from_cities(hid_iod);
+				});
+				
+				generate_from_cities(hid_iod);
+				
+			}
+			
+			if($("select.tour_tocity").length > 0)
+			{
+				$("select.tour_tocity").each(function()
+				{
+					var cur_tag = $(this);
+					var sco = $(this).data("href") !== undefined ? $(this).data("href") : "";
+					var this_var = "#"+$(this).attr("id");
+					if(sco !== ""){
+						cur_tag.val(sco);
+						cur_tag.data("href", "");
+						cur_tag.change();
+					}
+					
+					$(this_var).select2({
+					
+					}).on("change", function(ui)
+					{
+						var city_id = $(this).val();
+						var url = base_url + "tour/get_location_info";
+						$.ajax(
+						{
+							url: url,
+							method: "post",
+							data:{id:city_id},
+							success: function(response)
+							{
+								$("#to_hid").val(response);
+								$("#id_to_city").val(city_id);
+							},
+							error: function(response)
+							{
+								
+							}
+						});
+					});
+					
+				});
+			}
+		}
+		
+		if($(".mn_facilities").length > 0){
+			$(".mn_facilities :checkbox").change(function(){
+				var id = $(this).data('id');
+				var value = $("#"+id).val();
+				var checked = $("#"+id).is(':checked');
+				
+				
+				if(total_people() == 0){
+					var total_peoples = 1;
+				}else{
+					var total_peoples = total_people();
+				} 
+				
+				if (checked == true) {
+					$("label[for='"+id+"']").attr('style',  'background-color:#33ff33');
+					var exist_val = $("#changeval").html().replace(/,/g , "");
+					var final_price = parseInt(exist_val)+parseInt(value);
+					if (total_people() == 0) {
+                        final_price = 0;
+                    }
+					$("#changeval").html(money(final_price));
+					$("#changeval1").html(money(final_price));
+					var current_val = $("#extra_cost").val().replace(/,/g , "");
+					$("#extra_cost").val(money((parseInt(current_val)+parseInt(value))*total_peoples));
+					
+                }else{
+					$("label[for='"+id+"']").attr('style',  'background-color:none');
+					var exist_val = $("#changeval").html().replace(/,/g , "");
+					var final_price = parseInt(exist_val)-parseInt(value);
+					if (total_people() == 0) {
+                        final_price = 0;
+                    }
+					$("#changeval").html(money(final_price));
+					$("#changeval1").html(money(final_price));
+					var current_val = $("#extra_cost").val().replace(/,/g , "");
+					$("#extra_cost").val(money((parseInt(current_val)-parseInt(value))*total_peoples));
+				}
+				$("#price_tour").val($("#changeval").html().replace(/,/g , ""));
+			});
+		}
+		
+		$('.rating_variables:checkbox').on('change',function(){
+			var th = $(this);
+			name = th.prop('name'); 
+			if(th.is(':checked')){
+			 }
+		});
+		
+		
+	/*
+	 *
+	 ***************
+	 *Search Page Start
+	 ****************
+	 *
+	 */
+		
+	if($("#products").length > 0) 	{
+		var loading_img ="<p id='img_loading' class='text-center'><img src='"+ base_url +"assets/images/loader/loading.gif' alt'Loading'><br><h3 class='text-center' ></h3>";
+		$('#products').html(loading_img);
+		
+		setTimeout(function(){
+			var search=$( "#modify_package" ).serialize();
+			$.ajax({
+				method: "get",
+				url: base_url +"tour/result",
+				data: search
+			})
+			.done(function( msg ) {
+				$('#compact-pagination').show();
+				$('#products').html(msg);
+				
+				
+				if ($("#tours_count").val() > 1) {
+					$('#compact-pagination').pagination({
+						pages: $("#tours_count").val(),
+						cssStyle: 'compact-theme',
+						displayedPages: 50
+					});
+                }
+				
+				
+				var min_value = $("body").find("#min_range").val();
+				var max_value = $("body").find("#max_range").val();
+				if (min_value == max_value) {
+					min_value = 0;
+				}
+				if (min_value == '') {
+					min_value = 1;
+				}
+				if (max_value == '') {
+					max_value = 20000;
+				}
+				//change_slider(min_value,max_value);
+				var min_date = $("#min_date").val();
+				var max_date = $("#max_date").val();
+				var date_string = min_date +' to '+ max_date;
+				$("#tour_date").html(date_string);
+				display_farsi(language);
+			});
+		}, 1000);
+		
+		
+		if($("form#fliter").length > 0){
+			$( "input[type='checkbox']" ).change(function(){
+				ajaxsearch();
+			});
+		}
+		
+		
+		$("#click_modify").click(function(){
+			$("#show_search").slideToggle();
+		});
+		
+		$(".segmented_btn").click(function(){
+			$(".segmented_btn").removeClass('active');
+			var order_by = $(this).attr("data-id");
+			var order_by_value = $(this).attr("data-value");
+			$("#order_by").val(order_by);
+			$("#order_by_value").val(order_by_value);
+			if(order_by_value==1){
+			$(this).attr("data-value",0);
+			}else {
+			$(this).attr("data-value",1);
+			}
+			$(this).addClass("active");
+			ajaxsearch();
+		});
+		$('.spcl_o:checkbox').on('change',function(){
+			if ($(this).prop('checked') == true) {
+                $("#sp_ofr").val(1);
+            }else{
+				$("#sp_ofr").val(0);
+			}
+			
+			
+		});
+		
+		$('#list').click(function(event){event.preventDefault();$('#products .item').addClass('list-group-item');}); 
+		$('#list').click(function(event){event.preventDefault();$('#products .item').removeClass('grid-group-item');}); 
+		$('#grid').click(function(event){event.preventDefault();$('#products .item').removeClass('list-group-item');
+		$('#products .item').addClass('grid-group-item');});
+
+}
+
+/*
+	 *
+	 ***************
+	 *Search Page End
+	 ****************
+	 *
+	 */
+	
+
+$('.roomtype:checkbox').on('change',function(){
+	var type_store = [];
+	var hotel_id = $("#hotel_id").val();
+	var type = $(this).data('value');
+	$("#count_"+type+hotel_id).val(1);
+	$("#count_"+type+hotel_id).prop('disabled',false);
+	if(!this.checked) {
+		$("#count_"+type+hotel_id).val(0);
+		$("#count_"+type+hotel_id).prop('disabled',true);
+    }
+	
+	$('input:checkbox.roomtype').each(function () {
+	   if (this.checked) {
+        type_store.push($(this).data('value'));
+       }
+	});
+	
+	if(type_store.length > 0) {
+		var type_price = [];
+		$.each(type_store,function(index,value){
+            if (value != 'single') {
+                type_price.push($("#display_"+value+hotel_id).html());
+            }
+		});
+
+		var total = 0;
+		$.each(type_price,function() {
+			total += parseInt(this);
+		});
+		var tour_price = parseInt($("#overall_tour_price").val())+parseInt(total);
+		$("#changeval").html(money(tour_price));
+		$("#changeval1").html(money(tour_price));
+		
+    }
+	
+});
+	
+
+	
+$(".txt_count").change(function(){
+	var type = $(this).data('value');
+	var master_id = $(this).data('master');
+	var flag = $(this).data('flag');
+	
+	if (type == 'single' || type == 'double' || type == 'triple') {
+	   var box_val =  $(this).val();
+	   $('#get_'+type+master_id).remove();
+	   if (box_val !== 0) {
+        $(".prebook_data").prepend('<input type="hidden" id="get_'+type+master_id+'" name="after_confirm['+type+']['+master_id+']" value='+box_val+'>');
+       }
+    }
+	
+	var single_travellers_count = $("#count_single"+master_id).val();
+	var double_travellers_count = $("#count_double"+master_id).val();
+	var triple_travellers_count = $("#count_triple"+master_id).val();
+	
+	if (single_travellers_count > 0 || double_travellers_count > 0 || triple_travellers_count > 0) {
+       $("#count_infants"+master_id).attr("readonly", false);
+	   $("#count_twotosix"+master_id).attr("readonly", false);
+	   $("#count_sixtotwelve"+master_id).attr("readonly", false);
+	   $("#count_twelvetosixteenth"+master_id).attr("readonly", false);
+    }else{
+		$("#count_infants"+master_id).attr("readonly", true).val('');
+		$("#count_twotosix"+master_id).attr("readonly", true).val('');
+		$("#count_sixtotwelve"+master_id).attr("readonly", true).val('');
+		$("#count_twelvetosixteenth"+master_id).attr("readonly", true).val('');
+	}
+	
+	
+	var total_cost = price_engine();
+	if (total_people() == 0) {
+        total_cost = 0;
+		$("#extra_cost").val(0);
+		$('.mn_checked').find('label').attr('style',  'background-color:none');
+		$('.mn_checked').find('input[type=checkbox]:checked').removeAttr('checked');
+    }
+	
+	
+	
+	
+	if (type == 'single') {
+		 var dt = $("#count_single"+master_id).val();
+		if (flag == '') {
+			$("#count_room_single").val(dt);
+        }else{
+			$(".prebook_data").append("<input  type='hidden' name='single_"+flag+"' value='"+dt+"'>");
+		}
+		
+	}
+	if (type == 'double') {
+		var dt = $("#count_double"+master_id).val()/2;
+		if (flag == '') {
+			$("#count_room_double").val(dt);
+		}else{
+			$(".prebook_data").append("<input  type='hidden' name='double_"+flag+"' value='"+dt+"'>");
+		}
+	}
+	if (type == 'triple') {
+		var dt = $("#count_triple"+master_id).val()/3;
+		if (flag == '') {
+            $("#count_room_triple").val(dt);
+        }else{
+			$(".prebook_data").append("<input  type='hidden' name='triple_"+flag+"' value='"+dt+"'>");
+		}
+		
+	}
+	if (type == 'infants') {
+		var dt = $("#count_infants"+master_id).val();
+		if (flag == '') {
+            $("#infants").val(dt);
+        }else{
+			$(".prebook_data").append("<input type='hidden' name='infants_"+flag+"' value='"+dt+"'>");
+		}
+		
+	}
+	if (type == 'twotosix') {
+		var dt = $("#count_twotosix"+master_id).val();
+		if (flag == '') {
+            $("#twotosix").val(dt);
+        }else{
+			$(".prebook_data").append("<input type='hidden' name='twotosix_"+flag+"' value='"+dt+"'>");
+		}
+		
+	}
+	if (type == 'sixtotwelve') {
+		var dt = $("#count_sixtotwelve"+master_id).val();
+		if (flag == '') {
+           $("#sixtotwelve").val(dt);
+        }else{
+			$(".prebook_data").append("<input type='hidden' name='sixtotwelve_"+flag+"' value='"+dt+"'>");
+		}
+		
+	}
+	if (type == 'twelvetosixteenth') {
+		var dt = $("#count_twelvetosixteenth"+master_id).val();
+		if (flag == '') {
+            $("#twelvetosixteenth").val(dt);
+        }else{
+			$(".prebook_data").append("<input type='hidden' name='twelvetosixteenth_"+flag+"' value='"+dt+"'>");
+		}
+		
+	}
+	
+	var trans_cost = $("#transportation_cost").val()*total_people();
+	$("#cost_transportation").val(trans_cost);
+	$("#changeval").html(money(total_cost));
+	$("#changeval1").html(money(total_cost));
+	$("#price_tour").val(total_cost);
+	
+	var sdt_r_c = 0;
+	$(document).find(".single_room, .double_room, .triple_room").each(function(index, value){
+		
+		if($(this).val() > 0)
+		{
+			sdt_r_c = 1;
+			return false;
+			
+		}
+		});
+	if (sdt_r_c > 0) {
+		$(".cta").show();
+	}else{
+		$(".cta").hide();
+	}
+	
+	
+		
+});
+	 
+	  $('input[type=radio][name=trans]').change(function() {
+		var price = $(this).data('value');
+		var infos = $(this).data('infos');
+		infos = JSON.stringify(infos);
+		$("#departures").val(infos);
+		
+		
+		if (price == '') {
+            price = 0;
+        }
+		
+		var get_id = $(this).val().split(",");
+		
+		
+		if (price == 0) {
+            $("#transport_flag").val(0);
+        }else{
+			$("#transport_flag").val(1);
+		}
+		var param = this.value;
+		$("#trans_param").val(param);
+		$("#transportation_cost").val(price);
+		
+		var trans_cost = $("#transportation_cost").val()*total_people();
+		$("#cost_transportation").val(trans_cost);
+		
+		var total_cost = price_engine();
+		if (total_people() == 0) {
+			total_cost = 0;
+		}
+		$("#changeval").html(money(total_cost));
+		$("#changeval1").html(money(total_cost));
+		$("#price_tour").val(money(total_cost));
+		
+	});
+	  
+	
+	  
+	  
+ 
+	var store = [];
+	if($(".div_gallery").length > 0){
+		initialize($("#latitude").val(),$("#longitude").val(),$("#h_name").val());
+		store.push($("#hotel_id").val());
+		
+		
+		var showTotalChar = 1000, showChar = "Read more ", hideChar = "Minimize ";
+		$('.more').each(function() {
+			var content = $(this).text();
+			if (content.length > showTotalChar) {
+				var con = content.substr(0, showTotalChar);
+				var hcon = content.substr(showTotalChar, content.length - showTotalChar);
+				var txt= con +  '<span class="dots">...</span><span class="morectnt"><span>' + hcon + '</span>&nbsp;&nbsp;<a href="" class="showmoretxt">' + showChar + '</a></span>';
+				$(this).html(txt);
+			}
+		});
+		$(".showmoretxt").click(function() {
+			if ($(this).hasClass("sample")) {
+				$(this).removeClass("sample");
+				$(this).text(showChar);
+			} else {
+				$(this).addClass("sample");
+				$(this).text(hideChar);
+			}
+			$(this).parent().prev().toggle();
+			$(this).prev().toggle();
+			return false;
+		});
+	
+	
+	
+	
+
+	if (controller == "tour" && method == "details") {
+		var options = {
+		$AutoPlay: true,                                    
+		$AutoPlayInterval: 4000,                            
+		$SlideDuration: 500,                                
+		$DragOrientation: 3,                                
+		$UISearchMode: 0,                                   
+
+		$ThumbnailNavigatorOptions: {
+			$Class: $JssorThumbnailNavigator$,              
+			$ChanceToShow: 2,                               
+
+			$Loop: 1,                                       
+			$SpacingX: 3,                                  
+			$SpacingY: 3,                                   
+			$DisplayPieces: 6,                              
+			$ParkingPosition: 253,                          
+
+			$ArrowNavigatorOptions: {
+				$Class: $JssorArrowNavigator$,              
+				$ChanceToShow: 2,                               
+				$AutoCenter: 2,                                 
+				$Steps: 6                                       
+			}
+		}
+	};
+
+	var jssor_slider1 = new $JssorSlider$("slider1_container", options);
+	
+	ScaleSlider();
+	
+
+	$(window).bind("load", ScaleSlider);
+	$(window).bind("resize", ScaleSlider);
+	$(window).bind("orientationchange", ScaleSlider);
+		var pre_infos = $("#pre_departures").data('pre_infos');
+		pre_infos = JSON.stringify(pre_infos);
+		$("#departures").val(pre_infos);
+    }
+	
+		
+		
+		$(document).on("click", ".cta", function(){	
+			$("#book_now").submit();
+			
+		});
+		
+		 $(window).scroll(function()
+  {
+    var wScroll = $(this).scrollTop();
+
+    // Activate menu
+    if (wScroll > 50)
+    {
+      $(".flight_block_modify").addClass("active");
+      $("#slide_out_menu").addClass("scrolled");
+    }
+    else{
+      $(".flight_block_modify").removeClass("active");
+      $("#slide_out_menu").removeClass("scrolled");
+    }
+
+
+  });
+
+
+
+$(window).scroll(function()
+  {
+    var wScroll = $(this).scrollTop();
+
+    // Activate menu
+    if (wScroll > 90)
+    {
+      $(".hotel-list-view1").addClass("active");
+      $("#slide_out_menu").addClass("scrolled");
+    }
+    else {
+      $(".hotel-list-view1").removeClass("active");
+      $("#slide_out_menu").removeClass("scrolled");
+    }
+
+
+  });
+		
+	if($(".mediashare").length > 0){
+		var current_location = window.location.href;
+		/*var current_location = 'http://10020.ir/10020ir/tour/details/cUxzN1dkSlY3L2JTRk9GNE9pS2VmU2JWZVlWZDFRV2xmeS9PQ1ZOUlBYOFlCTGNGL2xIek0wUTJDUWVkelU1aHlqYWgwYXY1bjlOcTNqcXpDdXRBdmc9PQ==';*/
+		var options = {
+			facebook : true,
+			googlePlus : true,
+			twitter : false
+		};
+		
+		$('.mediashare').shareButtons(current_location, options);
+	}	
+	}
+    /******Prebook page******************************START******/
+	
+	if($("form#prebook_submit").length > 0){
+		$('.nav-tabs > li a[title]').tooltip();
+		$('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+			var $target = $(e.target);
+			if ($target.parent().hasClass('disabled')) {
+				return false;
+			}
+		});
+		$(".next-step1").click(function (e) {
+			if($("#prebook_submit").valid()){
+				var $active = $('.wizard .nav-tabs li.active');
+				$active.next().removeClass('disabled');
+				nextTab($active);
+				$("html, body").animate({ scrollTop: 0 }, "slow");
+			}
+		});
+		$(".next-step2").click(function (e) {
+			if($("#prebook_submit").valid()){
+				var $active = $('.wizard .nav-tabs li.active');
+				$active.next().removeClass('disabled');
+				nextTab($active);
+			}
+		});
+		
+		$(".prev-step").click(function (e) {
+			var $active = $('.wizard .nav-tabs li.active');
+			prevTab($active);
+		});
+		
+		$(document).on("change", "select.set_country", function()
+		{
+			var cur_parent = $(this).closest(".traveller_details");
+			if($(cur_parent).find(".national_id").length > 0 && $(this).val() == "IR")
+			{
+				$(cur_parent).find(".national_id").show();
+				$(cur_parent).find(".national_id").find(":input").removeAttr("disabled");
+			}
+			else
+			{
+				$(cur_parent).find(".national_id").hide();
+				$(cur_parent).find(".national_id").find(":input").prop("disabled", true);
+			}
+		});
+		
+		
+		$(document).on("click", ".prebook_btn", function() {
+			if($(this).closest("form#prebook_submit").valid()) {
+				var url = base_url+"tour/prebook_submit";
+				var form_data = new FormData($("form#prebook_submit")[0]);
+				var loading_img ="<p class='text-center pre_loader'><img src='"+ base_url +"assets/images/loader/loading.gif' alt'Loading'><br><h3 class='text-center' ></h3>";
+				$.ajax(
+					{
+						url: url,
+						method: "POST",
+						data: form_data,
+						processData: false,
+						contentType:false,
+						beforeSend: function()
+						{
+							/*$(".prebook_btn").hide();
+							$(".prev-step").hide();
+							$(".loader").html(loading_img);*/
+						},
+						success: function(response)
+						{
+							if (response !== 0) {
+                               window.location.href = base_url+"tour/voucher_generate/"+response;
+                            } 
+							
+						},
+						error: function(response)
+						{
+							
+						}
+				});
+			}
+		});
+		
+		
+		$(document).on('click','input:checkbox', function() {
+			var $box = $(this);
+			if ($box.is(":checked")) {
+				var group = "input:checkbox[name='" + $box.attr("name") + "']";
+				$(group).prop("checked", false);
+				$box.prop("checked", true);
+			} else {
+				$box.prop("checked", false);
+			}
+		});
+
+		$(document).on('keypress','.first_type',function(){
+			var id = this.id;
+			$("#"+id).autocomplete({
+				source: base_url+"b2c/companion_by_term",
+				minLength: 2,
+				autoFocus: true,
+				select: function(event, ui) {
+					$(this).val(ui.item.value);
+					filled_it(id,ui);
+					return false;
+				}
+			});
+		});
+	}
+	/*******Prebook page******************************END******/
+	
+		function ScaleSlider() {
+			var parentWidth = jssor_slider1.$Elmt.parentNode.clientWidth;
+			if (parentWidth)
+				jssor_slider1.$ScaleWidth(Math.min(parentWidth, 800));
+			else
+				window.setTimeout(ScaleSlider, 30);
+		}
+
+	});
+	
+	
+	
+ 
+ 
+ function final_price(txtval,type,extra_total){	
+	var transportation_cost = parseInt($("#transportation_cost").val());
+	var hotel_id = $("#hotel_id").val();
+	var exist_val = $("#fixed_price").val();
+	var hotel_price = $("#hotel_price"+hotel_id).val();
+	var overall_tour_price = $("#overall_tour_price").val();
+	var total_nights = $("#total_nights").val();
+	var single_room_price = $("#single_val"+hotel_id).val();
+	
+	
+	if (txtval == 0) {
+		$("#extra_"+type+hotel_id).css('display','inline-block').text("invalid entry");
+		setTimeout(function(){
+			$("#display_"+type+hotel_id).html($("#"+type+"_val"+hotel_id).val());
+			$("#extra_"+type+hotel_id).fadeOut("slow");
+			$("#count_"+type+hotel_id).val(1);
+		}, 1000);
+    }
+	
+	
+	var single_val = 0; var double_val = 0; var triple_val = 0; var infants_val = 0; var twotosix_val = 0;  var sixtotwelve_val = 0; var twelvetosixteenth_val = 0;
+	
+	if ($("#price_single"+hotel_id).length > 0) {
+        var single_val = $("#price_single"+hotel_id).val();
+    }
+	if ($("#price_double"+hotel_id).length > 0) {
+        var double_val = $("#price_double"+hotel_id).val();
+    }
+	if ($("#price_triple"+hotel_id).length > 0) {
+        var triple_val = $("#price_triple"+hotel_id).val();
+    }
+	if ($("#price_infants"+hotel_id).length > 0) {
+        var infants_val = $("#price_infants"+hotel_id).val();
+    }
+	if ($("#price_twotosix"+hotel_id).length > 0) {
+        var twotosix_val = $("#price_twotosix"+hotel_id).val();
+    }
+	if ($("#price_sixtotwelve"+hotel_id).length > 0) {
+        var sixtotwelve_val = $("#price_sixtotwelve"+hotel_id).val();
+    }
+	if ($("#price_twelvetosixteenth"+hotel_id).length > 0) {
+        var twelvetosixteenth_val = $("#price_twelvetosixteenth"+hotel_id).val();
+    }
+	
+	var extra_night_price = parseInt(single_val)+parseInt(double_val)+parseInt(triple_val)+parseInt(infants_val)+parseInt(twotosix_val)+parseInt(sixtotwelve_val)+parseInt(twelvetosixteenth_val);
+	
+
+	if (transportation_cost !== 0) {
+        var tour_ds = (overall_tour_price/total_nights)/single_room_price;
+		var tour_price = (hotel_price*tour_ds*total_nights)+transportation_cost;
+		
+    }else{
+		var tour_ds = (overall_tour_price/total_nights)/single_room_price;
+		var tour_price = hotel_price*tour_ds*total_nights;
+	}
+	
+	
+	var infants_price = parseInt($("#infants_val"+hotel_id).val())*parseInt($("#count_infants"+hotel_id).val());
+	var twotosix_price = parseInt($("#twotosix_val"+hotel_id).val())*parseInt($("#count_twotosix"+hotel_id).val());
+	var sixtotwelve_price = parseInt($("#sixtotwelve_val"+hotel_id).val())*parseInt($("#count_sixtotwelve"+hotel_id).val());
+	var twelvetosixteenth_price = parseInt($("#twelvetosixteenth_val"+hotel_id).val())*parseInt($("#count_twelvetosixteenth"+hotel_id).val());
+	if (extra_total !== 0) {
+		var current_total = parseInt(tour_price)+(parseInt(infants_price) + parseInt(twotosix_price) + parseInt(sixtotwelve_price) + parseInt(twelvetosixteenth_price))*($("#total_nights").val())+parseInt(extra_total);
+		$("#extra_total"+hotel_id).val(extra_total);
+	}else {
+		var ex = 0;
+	$("#extra_total"+hotel_id).val(ex);
+		var current_total = parseInt(tour_price)+parseInt(parseInt(infants_price) + parseInt(twotosix_price) + parseInt(sixtotwelve_price) + parseInt(twelvetosixteenth_price))*($("#total_nights").val())+parseInt(ex)+parseInt(extra_night_price);
+	}
+	
+	$("#changeval").html(money(current_total));
+	$("#changeval1").html(money(current_total));
+	$("#price_tour").val($("#changeval").html());
+	
+ }
+	
+	function nextTab(elem) {
+		$(elem).next().find('a[data-toggle="tab"]').click();
+	}
+	function prevTab(elem) {
+		$(elem).prev().find('a[data-toggle="tab"]').click();
+	}
+		
+	function change_price(count,type,hotel_id){
+		if (count) {
+			var change_price = count*$("#hid_"+type+hotel_id).val();
+			$("#pop_price").html(change_price);
+			var exist_val = $("#changeval").html();
+			$("#price_"+type+hotel_id).val(change_price);
+			var extra_total = total_room_cost(hotel_id)+get_extra_night_price();
+			$("#changeval").html(money(extra_total));
+			$("#changeval1").html(money(extra_total));
+			$("#price_tour").val($("#changeval").html());
+		}
+	}
+	
+	function total_price(price){
+		var exist_val = $("#fixed_price").val();
+		$("#changeval").html(money(parseInt(exist_val)+parseInt(price)));
+		$("#changeval1").html(money(parseInt(exist_val)+parseInt(price)));
+		$("#price_tour").val($("#changeval").html());
+		
+	}
+	function get_tour(from_id){
+		var base_url = $("head").data("base-url");
+		var hid_tocity = '';
+		if ($("#hid_tocity").length > 0) {
+            hid_tocity = $("#hid_tocity").val();
+        }
+		
+		if (from_id) {
+            $.ajax({
+				dataType: 'json',
+				data: {from_id: from_id,hid_tocity:hid_tocity},
+				method:'post',
+				url: base_url + "tour/check_tour",
+				success: function(data){    
+					if (data) {
+						$("select.tour_tocity").html(data.result).trigger('change');
+                    }
+				}
+			});
+        }
+	}
+	
+	function initialize(lat,lon,hotel_name) {
+		var base_url = $("head").data("base-url");						
+		var latitude =lat;
+		var longitude = lon;
+		var latlng = new google.maps.LatLng(latitude,longitude);
+		var myOptions = {
+		  scrollwheel: false,
+		  zoom: 12,
+		  center: latlng,
+		  mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+		var map = new google.maps.Map(document.getElementById("hotel_map"),
+			myOptions);
+		var pinImage = new google.maps.MarkerImage(base_url+"assets/images/hotel_icon.png");
+		var marker=new google.maps.Marker({
+						position:latlng,
+						draggable :false,
+						icon: pinImage,
+						animation: google.maps.Animation.DROP
+					  });
+		
+		var contentString = "<div>"+hotel_name+"</div>";
+		var infowindow = new google.maps.InfoWindow({
+			content: contentString
+		});
+
+		marker.addListener('mouseover', function() {
+			infowindow.open(map, marker);
+		});
+
+
+		marker.setMap(map);
+
+		google.maps.event.addListener(marker, 'dragend', function(){
+			var point = marker.getPosition();
+			map.panTo(point);
+			document.getElementById('latitude').value=point.lat();
+			document.getElementById('longitude').value=point.lng();
+		});
+
+
+   	}
+	
+	function hasValue(elem) {
+		return $(elem).filter(function() { return $(this).val(); }).length > 0;
+	}
+	
+	function ajaxsearch() {
+		var loading_img ="<p class='text-center'><img src='"+ base_url +"assets/images/loader/loading.gif' alt'Loading'><br><h3 class='text-center' ></h3>";
+		var min_value = $("body").find("#min_range").val();
+		var max_value = $("body").find("#max_range").val();
+		//$("html, body").animate({ scrollTop: 100 }, "slow");
+		$('#products').html(loading_img);
+		$("#compact-pagination").hide();
+		
+		setTimeout(function(){
+			var postData=$( "#modify_package" ).serialize() + '&' +  $( "#fliter" ).serialize();
+			$.ajax({
+				method: "get",
+				url: base_url+'tour/result',
+				data: postData
+			})
+			.done(function( msg ) {
+				$('#products').html(msg);
+				if ($("#tours_count").val() > 1) {
+					$('#compact-pagination').pagination({
+						pages: $("#tours_count").val(),
+						cssStyle: 'compact-theme',
+						displayedPages: 50
+					});
+                }	
+				$(".total-count").html($('#all_count').val());
+				if ($("#tours_count").val() > 1) {
+					$('#compact-pagination').show();
+				}
+				display_farsi(language);
+			});
+		}, 1000);
+	
+	}
+	
+	
+	
+	function ScaleSlider() {
+		var parentWidth = jssor_slider1.$Elmt.parentNode.clientWidth;
+		if (parentWidth)
+			jssor_slider1.$ScaleWidth(Math.min(parentWidth, 800));
+		else
+			window.setTimeout(ScaleSlider, 30);
+	}
+	
+	
+	
+	function get_master_id(){
+		var selected_master = [];
+		$("input:checkbox[class=hotel_variables]").each(function() {
+			if($(this).is(':checked')){
+				selected_master.push($(this).data('id'));
+			}
+		});
+		return selected_master[0];
+	}
+	
+	function get_extra_night_price(){
+		var hotel_id = $("#id_hotel").val();
+		var single = $("#price_single"+hotel_id).val();
+		if (isNaN(single)) {
+           single = 0;
+        }
+		var doubles = $("#price_double"+hotel_id).val()*parseInt($("#count_double"+hotel_id).val());
+		
+		if (isNaN(doubles)) {
+		   doubles = 0;
+        }
+		var triple = $("#price_triple"+hotel_id).val();
+		if (isNaN(triple)) {
+           triple = 0;
+        }
+		var infants = $("#price_infants"+hotel_id).val();
+		if (isNaN(infants)){
+           infants = 0;
+        }
+		var twotosix = $("#price_twotosix"+hotel_id).val();
+		if (isNaN(twotosix)) {
+           twotosix = 0;
+        }
+		var sixtotwelve = $("#price_sixtotwelve"+hotel_id).val();
+		if (isNaN(sixtotwelve)) {
+           sixtotwelve = 0;
+        }
+		var twelvetosixteenth = $("#price_twelvetosixteenth"+hotel_id).val();
+		if (isNaN(twelvetosixteenth)) {
+           twelvetosixteenth = 0;
+        }
+		
+		var total = parseInt(single)+parseInt(doubles)+parseInt(triple)+parseInt(infants)+parseInt(twotosix)+parseInt(sixtotwelve)+parseInt(twelvetosixteenth);
+		return total;
+	}
+	
+	function total_people(id){
+		if (id == undefined) {
+			
+			var single_arr = [];
+			var double_arr = [];
+			var triple_arr = [];
+			var total_single = 0;
+			var total_double = 0;
+			var total_triple = 0;
+			
+			$(".single_room").each(function(index,elem){
+			var val_single = $(elem).val();
+			single_arr.push(val_single);
+			});
+			for (var i = 0; i < single_arr.length; i++) {
+			total_single += single_arr[i] << 0;
+			}
+			
+			$(".double_room").each(function(index,elem){
+			var val_double = $(elem).val();
+			double_arr.push(val_double);
+			});
+			for (var i = 0; i < double_arr.length; i++) {
+			total_double += double_arr[i] << 0;
+			}
+			
+			$(".triple_room").each(function(index,elem){
+			var val_triple = $(elem).val();
+			triple_arr.push(val_triple);
+			});
+			for (var i = 0; i < triple_arr.length; i++) {
+			total_triple += triple_arr[i] << 0;
+			}
+			
+			return parseInt(total_single)+parseInt(total_double)+parseInt(total_triple);
+        }else{
+			
+			var master_id = id;
+			
+			var single_count = $("#count_single"+master_id).val();
+			if (single_count == '') single_count = 0;
+			var double_count = $("#count_double"+master_id).val();
+			if (double_count == '') double_count = 0;
+			var triple_count = $("#count_triple"+master_id).val();
+			if (triple_count == '') triple_count = 0;
+			
+			return parseInt(single_count)+parseInt(double_count)+parseInt(triple_count);
+		}
+		
+	}
+	
+	function total_room_cost(master_id){
+			var single_count = $("#count_single"+master_id).val();
+			if (single_count == '') single_count = 0;
+			var single_price = single_count*parseInt($("#display_single"+master_id).html().replace(/,/g , ""));
+			var double_count = $("#count_double"+master_id).val();
+			if (double_count == '') double_count = 0;
+			var double_price = double_count*parseInt($("#display_double"+master_id).html().replace(/,/g , ""));
+			var triple_count = $("#count_triple"+master_id).val();
+			if (triple_count == '') triple_count = 0;
+			var triple_price = parseInt(triple_count)*parseInt($("#display_triple"+master_id).html().replace(/,/g , ""));
+			
+			var infants_count = $("#count_infants"+master_id).val();
+			if (infants_count == '') infants_count = 0;
+			var infants_price = infants_count*parseInt($("#display_infants"+master_id).html().replace(/,/g , ""));
+			
+			var twotosix_count = $("#count_twotosix"+master_id).val();
+			if (twotosix_count == '') twotosix_count = 0;
+			var twotosix_price = twotosix_count*parseInt($("#display_twotosix"+master_id).html().replace(/,/g , ""));
+			
+			var sixtotwelve_count = $("#count_sixtotwelve"+master_id).val();
+			if (sixtotwelve_count == '') sixtotwelve_count = 0;
+			var sixtotwelve_price = sixtotwelve_count*parseInt($("#display_sixtotwelve"+master_id).html().replace(/,/g , ""));
+			
+			var twelvetosixteenth_count = $("#count_twelvetosixteenth"+master_id).val();
+			if (twelvetosixteenth_count == '') twelvetosixteenth_count = 0;
+			var twelvetosixteenth_price = twelvetosixteenth_count*parseInt($("#display_twelvetosixteenth"+master_id).html().replace(/,/g , ""));
+			
+			
+			var c_total_price = parseInt(single_price)+parseInt(double_price)+parseInt(triple_price)+parseInt(infants_price)+parseInt(twotosix_price)+parseInt(sixtotwelve_price)+parseInt(twelvetosixteenth_price);
+			return c_total_price;
+		
+	}
+	
+	function price_engine() {
+		var alltypes = [];
+		$("input:checkbox").each(function(){
+			alltypes.push($(this).data('id'));
+		});
+		var totals = [];
+		var total_peoples = [];
+		for(var i=0;i<alltypes.length;i++){
+			if ($.isNumeric(alltypes[i])) {
+                totals.push(total_room_cost(alltypes[i]));
+				total_peoples.push(total_people(alltypes[i]));
+            }
+			
+		}
+		var total_cost = 0;
+		var transport_cost = 0;
+		$.each(totals,function() {
+			total_cost += this;
+		});
+		if ($("#transport_flag").val() == 1) {
+			$.each(total_peoples,function() {
+				transport_cost += this;
+			});
+        }
+		
+		var extra_cost = $("#extra_cost").val().replace(/,/g , "");
+		return total_cost+parseInt(extra_cost)+parseInt(transport_cost*$("#transportation_cost").val().replace(/,/g , ""));
+    }
+	
+	function money(val){
+		while (/(\d+)(\d{3})/.test(val.toString())){
+		  val = val.toString().replace(/(\d+)(\d{3})/, '$1'+','+'$2');
+		}
+		return val;
+	}
+	
+	function filled_it(id,datas) {
+        var arg = id.split("_");
+		var key = arg[1];
+		
+		var salutation = datas.item.salutation;
+		var lname = datas.item.lname;
+		var dob = datas.item.dob;
+		var passport_no = datas.item.passport_no;
+		var passport_exp = datas.item.passport_exp;
+		
+		$("#salutation_"+key).val(salutation);
+		$("#lname_"+key).val(lname);
+		//$("#dob_"+key).val(dob);
+		$("#pn_"+key).val(passport_no);
+		$("#pe_"+key).val(passport_exp);
+		
+		
+    }
+	
+	function generate_from_cities(iod) {
+       $("select.tour_fromcity").each(function()
+				{
+					var cur_tag = $(this);
+					var sco = $(this).data("href") !== undefined ? $(this).data("href") : "";
+					var url = base_url + "tour/tour_fromcity/"+iod;
+					var this_var = "#"+$(this).attr("id");
+					$.ajax(
+					{
+						url: url,
+						method: "GET",
+						dataType: "JSON",
+						success: function(response)
+						{
+							cur_tag.html(response.result);
+							if(sco !== "")
+							{
+								cur_tag.val(sco);
+								cur_tag.data("href", "");
+								cur_tag.change();
+							}
+							cur_tag.select2("destroy");
+							cur_tag.select2();
+						},
+						error: function(response)
+						{
+							cur_tag.html("");
+							cur_tag.select2("destroy");
+							cur_tag.select2();
+						}
+					});
+					
+					$(this_var).select2({
+					
+						
+					}).on("change", function(ui)
+					{
+						var city_id = $(this).val();
+						var url = base_url + "tour/get_location_info";
+						$("select.tour_tocity").select2("val", "");
+						$.ajax(
+						{
+							url: url,
+							method: "post",
+							data:{id:city_id},
+							success: function(response)
+							{
+								if (response !== 0) {
+									$("#from_hid").val(response);
+									$("#id_from_city").val(city_id);
+									get_tour(city_id);
+								}
+							},
+							error: function(response)
+							{
+								
+							}
+						});
+					});
+					
+				});
+    }
+	
+	
+
+});

@@ -1,0 +1,71 @@
+/* Demo specific style begin */
+.loader-dots {
+  position: absolute;
+  top: calc(50% - 10px);
+  left: calc(50% - 100px);
+}
+/* Demo specific style end */
+
+.loader-dots:after, .loader-dots:before {
+  height: 20px;
+  width: 45px;
+  background-image: radial-gradient(closest-side, #111 100%, transparent), radial-gradient(closest-side, #111 100%, transparent);
+  background-position: 0%, 100%;
+  background-size: 20px 20px, 20px 20px;
+  background-repeat: no-repeat;
+  position: absolute;
+  animation-name: spin-right;
+  animation-duration: 1.5s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: normal;
+  content: '';
+}
+
+.loader-dots:before {
+  animation-name: spin-left;
+}
+
+.loader-dots {
+  height: 20px;
+  width: 220px;
+  background-image: radial-gradient(closest-side, #111 100%, transparent), radial-gradient(closest-side, #111 100%, transparent), radial-gradient(closest-side, #111 100%, transparent), radial-gradient(closest-side, #111 100%, transparent), radial-gradient(closest-side, #111 100%, transparent), radial-gradient(closest-side, #111 100%, transparent), radial-gradient(closest-side, #111 100%, transparent), radial-gradient(closest-side, #111 100%, transparent), radial-gradient(closest-side, #111 100%, transparent);
+  background-position: 0%, 25px, 50px, 75px, 100px, 125px, 150px, 175px, 100%;
+  background-repeat: no-repeat;
+  position: absolute;
+  animation: toggle 1.5s ease-in-out infinite;
+}
+
+@keyframes spin-right {
+    0%   { transform: rotate(   0deg); right: 0    }
+   24.9% { transform: rotate(-180deg); right: 0    }
+   25%   { transform: rotate(-180deg); right: 25px }
+   49.9% { transform: rotate(   0deg); right: 25px }
+   50%   { transform: rotate(   0deg); right: 50px }
+   74.9% { transform: rotate(-180deg); right: 50px }
+   75%   { transform: rotate(-180deg); right: 75px }
+  100%   { transform: rotate(   0deg); right: 75px }
+}
+
+@keyframes spin-left {
+    0%   { transform: rotate(   0deg); right: 100px }
+   24.9% { transform: rotate(-180deg); right: 100px }
+   25%   { transform: rotate(-180deg); right: 125px }
+   49.9% { transform: rotate(   0deg); right: 125px }
+   50%   { transform: rotate(   0deg); right: 150px }
+   74.9% { transform: rotate(-180deg); right: 150px }
+   75%   { transform: rotate(-180deg); right: 175px }
+  100%   { transform: rotate(   0deg); right: 175px }
+}
+
+@keyframes toggle {
+  0%    { background-size: 20px 20px,20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px, 0px  0px, 0px  0px }
+  24.9% { background-size: 20px 20px,20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px, 0px  0px, 0px  0px }
+  25%   { background-size: 20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px }
+  49.9% { background-size: 20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px }
+  50%   { background-size: 20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px }
+  74.9% { background-size: 20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px }
+  75%   { background-size:  0px  0px, 0px  0px,20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px,20px 20px }
+  100%  { background-size:  0px  0px, 0px  0px,20px 20px,20px 20px, 0px  0px, 0px  0px,20px 20px,20px 20px,20px 20px }
+}
+

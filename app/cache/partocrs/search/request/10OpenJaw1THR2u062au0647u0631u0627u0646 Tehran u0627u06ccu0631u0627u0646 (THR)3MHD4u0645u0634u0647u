@@ -1,0 +1,18 @@
+<AirLowFareSearch xmlns:i='http://www.w3.org/2001/XMLSchema-instance' xmlns='http://schemas.datacontract.org/2004/07/ServiceModel.Request'>
+						<AdultCount></AdultCount>
+						<ChildCount></ChildCount>
+						<InfantCount></InfantCount>
+						<NearByAirports>true</NearByAirports>
+						<OriginDestinationInformations xmlns:d2p1='http://schemas.datacontract.org/2004/07/ServiceModel.Entities'>
+							
+						</OriginDestinationInformations>
+						<PricingSourceType>All</PricingSourceType>
+						<RequestOption>All</RequestOption>
+						<SessionId>e70f3ab7-ac67-e711-8106-b083fedbcc7e</SessionId>
+						<TravelPreference xmlns:d2p1='http://schemas.datacontract.org/2004/07/ServiceModel.Entities'>
+							<d2p1:AirTripType>OpenJaw</d2p1:AirTripType>
+							<d2p1:CabinType>Y</d2p1:CabinType>
+							<d2p1:MaxStopsQuantity>All</d2p1:MaxStopsQuantity>
+							
+						</TravelPreference>
+					</AirLowFareSearch>

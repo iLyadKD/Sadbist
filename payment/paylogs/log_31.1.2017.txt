@@ -1,0 +1,16 @@
+User: 5.78.188.9 - January 31, 2017, 5:41 pm
+ResponseCode: 0
+Data: {"RefId":"1A51A2AED18BD5EA","ResCode":"0","SaleOrderId":"31","SaleReferenceId":"121915069929","CardHolderInfo":"88FE9052519486AE2912B4D1F5AF46968F1AC3AC7D5E622AC359E2DA152FE7FB","CardHolderPan":"610433******5800"}
+-------------------------
+User: 5.78.188.9 - January 31, 2017, 5:54 pm
+ResponseCode: 0
+Data: {"RefId":"5F0BE4E7DE0DEBA1","ResCode":"0","SaleOrderId":"33","SaleReferenceId":"121915443314","CardHolderInfo":"88FE9052519486AE2912B4D1F5AF46968F1AC3AC7D5E622AC359E2DA152FE7FB","CardHolderPan":"610433******5800"}
+-------------------------
+User: 5.78.188.9 - January 31, 2017, 6:07 pm
+ResponseCode: 0
+Data: {"RefId":"1739D719904C0581","ResCode":"0","SaleOrderId":"34","SaleReferenceId":"121915830193","CardHolderInfo":"88FE9052519486AE2912B4D1F5AF46968F1AC3AC7D5E622AC359E2DA152FE7FB","CardHolderPan":"610433******5800"}
+-------------------------
+User: 5.78.188.9 - January 31, 2017, 6:11 pm
+ResponseCode: 0
+Data: {"RefId":"BEF3AE03157C4F5C","ResCode":"0","SaleOrderId":"35","SaleReferenceId":"121915941269","CardHolderInfo":"88FE9052519486AE2912B4D1F5AF46968F1AC3AC7D5E622AC359E2DA152FE7FB","CardHolderPan":"610433******5800"}
+-------------------------

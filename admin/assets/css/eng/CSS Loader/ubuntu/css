@@ -1,0 +1,154 @@
+@import url(http://fonts.googleapis.com/css?family=Ubuntu);
+
+/*circle basic*/
+.circle {
+  border-radius: 50%;
+}
+
+/*bar basic*/
+.bar { 
+  height:            40px;
+  width:             10px;
+}
+
+/*border colors*/
+.bcolor-1 {
+  border: #FFF 15px solid;  
+}
+.bcolor-2 {
+  border: #de4815 10px solid;
+}
+
+#d{margin:12.5px; animation:spin-c 3s linear infinite;}
+
+@keyframes spin-c{
+	from {transform: rotate(0deg);}
+	to {transform:rotate(360deg); }
+}
+
+#s{animation:spin-cc 3s linear infinite;}
+
+@keyframes spin-cc{
+	from {transform: rotate(360deg);}
+	to {transform:rotate(0deg); }
+}
+
+#loader{animation:pulse 1s infinite;}
+
+@keyframes pulse{
+	0% {transform: scale(0.6);}
+	50% {transform:scale(0.65); }
+  100% {transform: scale(0.6);}
+}
+
+
+/*background colors*/
+.bgcolor-1 {
+  background: #de4815;
+}
+.bgcolor-2 {
+  background: #FFF;
+}
+
+/*absolute positioning*/
+.ab {
+  position: absolute;
+}
+
+/*small bars*/
+.b-1 {
+  top:               -10%;
+  left:              10%;
+  transform: rotate(-40deg);
+}
+
+.b-2 {
+  top:               30%;
+  left:              90%;
+  transform: rotate(90deg);
+}
+
+.b-3 {
+  top:               85%;
+  left:              10%;
+  transform: rotate(40deg);
+}
+
+/*outermost circle*/
+.c {
+  width: 200px;
+  height: 200px; 
+  margin: 0px 0 0 0px;
+  top:  calc(40% - 100px);
+  left: calc(50% - 100px);
+}
+
+/*big circle within outermost circle*/
+.c1-o {  
+  width: 100px;
+  height: 100px;
+  top:  calc(50% - 65px);
+  left: calc(50% - 65px); 
+}
+
+/*basic small circle*/
+.c1-i, .c2-i, .c3-i {
+  width: 40px;
+  height: 40px;
+}
+
+/*initial position for small circle*/
+.c1-i{
+  top: calc(50% - 20px);
+  left: calc(0% - 20px);
+}
+
+.c2-i{
+  top: calc(35% - 20px);
+  left: calc(100% - 20px);
+}
+.c3-i{
+  top: calc(100% - 20px);
+  left: calc(50% - 20px);
+}
+
+/*states for transitions-animations*/
+/*state 1*/
+#c1-1{
+  top: calc(50% - 28px);
+  left: calc(-32% - 28px);
+}
+#c2-1{
+  top: calc(-25% - 28px);
+  left: calc(90% - 28px);
+}
+#c3-1{
+  top: calc(120% - 28px);
+  left: calc(90% - 28px);
+}
+
+/*state 2*/
+#c1-2, #c2-2, #c3-2{
+    top: calc(50% - 28px);
+    left: calc(50% - 28px);
+}
+
+
+p {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform:translateX(-46%);
+  font-size: 2rem;
+  font-weight: normal;
+  margin-top: 115px;
+  margin-left: -10px;
+  letter-spacing: -1px;
+  border-color: #de4815;
+  color: #de4815;
+  
+}
+
+body {
+  font-family: Ubuntu, sans-serif;  
+}
