@@ -266,6 +266,8 @@ class Payment extends CI_Controller {
 		try
 		{
 			$total_cost = number_format(((($flight_row->total_cost * 1) + ($baggage_cost * 1) + ($travel_insurance * 1) + ($cip_cost * 1)) - $discount_cost), 0, "", "");
+			$inbound_outbound = $this->get_inbound_outbound($flight_row);
+			
 			$ref_id = $this->Flight_model->new_flight_book($book_data);
 			$book_details = array(
 							"id" => $ref_id,
@@ -290,7 +292,9 @@ class Payment extends CI_Controller {
 							"currency" => $flight_row->currency,
 							"departures" => $flight_row->departures,
 							"arrivals" => $flight_row->arrivals,
-							"booked_date" => date("Y-m-d H:i:s")
+							"booked_date" => date("Y-m-d H:i:s"),
+							"inbound" => json_encode($inbound_outbound["inbound"]),
+							"outbound" => json_encode($inbound_outbound["outbound"]),
 							);
 
 
@@ -492,12 +496,13 @@ class Payment extends CI_Controller {
 
 	public function pay_process($token, $fr_id, $bk_id)
 	{
-		// error_reporting(E_ALL);
+		// error_reporting(E_ERROR);
 
 		$terminalId = '2108481';
 		$userName = 'ir100';
 		$userPassword = '29961660';
-        $callBackUrl = base_url('payment/paymentDetails');//'http://192.168.0.39/10020ir/payment/paymentDetails';
+        //$callBackUrl = 'http://10020.ir/pay/response.php';
+        $callBackUrl = 'http://10020.ir/payment/paymentDetails';
         $orderId = time();
         $payerId = 0;
 
@@ -529,7 +534,8 @@ class Payment extends CI_Controller {
 		
 		$err = $client->getError();
 		if ($err) {
-			redirect("payment/payment_error","refresh");
+			echo '<h2>Constructor error</h2><pre>' . $err . '</pre>';
+			die();
 		}
 
 		$u_id=$this->session->userdata(SESSION_PREPEND."id");
@@ -566,7 +572,7 @@ class Payment extends CI_Controller {
 			'terminalId' => $terminalId,
 			'userName' => $userName,
 			'userPassword' => $userPassword,
-			'orderId' => $orderId,
+			'orderId' => $bk_id,
 			'amount' => $amount,
 			'localDate' => $localDate,
 			'localTime' => $localTime,
@@ -576,11 +582,14 @@ class Payment extends CI_Controller {
         
 		// Call the SOAP method
 		$result = $client->call('bpPayRequest', $parameters1, $namespace);
+
 		// Check for a fault
 		
 		if ($client->fault) {
-		// echo '<pre>112',print_r($result);exit; 
-			redirect("payment/payment_error","refresh");
+			echo '<h2>Fault</h2><pre>';
+			print_r($result);
+			echo '</pre>';
+			die();
 		}else {
 
 			// Check for errors
@@ -589,14 +598,13 @@ class Payment extends CI_Controller {
 
 			$err = $client->getError();
 			if ($err) {
-				// echo '<pre>111',print_r($err);exit; 
-				redirect("payment/payment_error","refresh");
 				// Display the error
-				// echo '<h2>Error</h2><pre>' . $err . '</pre>';
-				// die();
+				echo '<h2>Error</h2><pre>' . $err . '</pre>';
+				die();
 			} 
 			else {
 				// Display the result
+
 				$res = explode (',',$resultStr);
 
 				// echo "<script>alert('Pay Response is : " . $resultStr . "');</script>";
@@ -608,7 +616,7 @@ class Payment extends CI_Controller {
 
 				if ($ResCode == "0") {
 					
-					/* From For submitting to mellat */
+					/* From For submitting to mellat - Rahul */
 
 					echo '<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><form style="display:none" method="post" action="https://bpm.shaparak.ir/pgwchannel/startpay.mellat" id=form1 name=form1>';
 
@@ -631,18 +639,15 @@ class Payment extends CI_Controller {
 
 	                echo '</script>';
 
-	                exit;
-
 				} 
-				else {
-					redirect("payment/payment_error","refresh");
+				else { echo '<pre>',print_r($resultStr);exit; 
 					// log error in app
 					// Update table, log the error
 					// Show proper message to user
 				}
 			}// end Display the result
 		}// end Check for errors 
-		redirect("payment/payment_error","refresh");
+
 		exit();
 		
 		
@@ -656,6 +661,8 @@ class Payment extends CI_Controller {
 		$terminalId = '2108481';
 		$userName = 'ir100';
 		$userPassword = '29961660';
+        //$callBackUrl = 'http://10020.ir/pay/response.php';
+        $callBackUrl = 'http://10020.ir/payment/paymentDetails';
         $orderId = time();
         $payerId = 0;
 
@@ -682,7 +689,8 @@ class Payment extends CI_Controller {
 				'res_code' => $_REQUEST['ResCode'],
 				'SaleOrderId' => $_REQUEST['SaleOrderId'],
 				'SaleReferenceId' => $_REQUEST['SaleReferenceId'],
-				'data_res' => json_encode($_REQUEST)
+				'data_res' => json_encode($_REQUEST),
+				'bookId'     	  => $bookId
 		);
 
 		$orderId = $_REQUEST['SaleOrderId'];
@@ -698,11 +706,10 @@ class Payment extends CI_Controller {
 			'userPassword'    => $userPassword,
 			'orderId'         => $orderId,
 			'saleOrderId'     => $verifySaleOrderId,
+			'bookId'     	  => $bookId,
 			'saleReferenceId' => $verifySaleReferenceId);
 
-		$orderDetails = $this->Payment_model->GetPaymentDetailsByOrderId($orderId);
 		//save data
-		$bk_id = @$orderDetails->book_id;
 
 		$saveAction = $this->Payment_model->updatePayRequestAction($data);
 
@@ -819,19 +826,80 @@ class Payment extends CI_Controller {
 		}
 		else{
 
+			//echo "sadasd";exit();
+
 			$verifyAction = $this->Payment_model->verifyUpdateAction($data);
 
 			$verifyAction = $this->Payment_model->UpdatePaymentStatus($data);
-			redirect("flight/voucher/".base64_encode($this->encrypt->encode($bk_id)));
+
+			redirect("flight/voucher/".base64_encode($this->encrypt->encode($bookId)), "refresh");
 
 
 		}
 
 	}
 
-	public function payment_error($id = ""){
-		$this->load->view('payment/error-display.php');
-	}
+function get_inbound_outbound($flight_row)
+{
+	$prices = $flight_row->prices;
+	$found_adult = 0;
+	$found_child = 0;
+	$found_infant = 0;
 
+	$inbound_adult = 0;
+	$inbound_child = 0;
+	$inbound_infant = 0;
+
+	$outbound_adult = 0;
+	$outbound_child = 0;
+	$outbound_infant = 0;
+
+	$prices = json_decode($prices);
+	foreach ($prices as $key => $price) {
+		switch ($price->person_type) {
+			case 'Adult':
+				if ($found_adult == 0) {
+					$outbound_adult = $price->quantity * $price->total_cost;
+					$found_adult = 1;
+				}else{
+					$inbound_adult = $price->quantity * $price->total_cost;
+				}
+				break;
+			case 'Child':
+				if ($found_child == 0) {
+					$outbound_child = $price->quantity * $price->total_cost;
+					$found_child = 1;
+				}else{
+					$inbound_child = $price->quantity * $price->total_cost;
+				}
+				break;
+			case 'Infant':
+				if ($found_infant == 0) {
+					$outbound_infant = $price->quantity * $price->total_cost;
+					$found_infant = 1;
+				}else{
+					$inbound_infant = $price->quantity * $price->total_cost;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	$inbound_total_cost = $inbound_adult + $inbound_child + $inbound_infant;
+	$outbound_total_cost = $outbound_adult + $outbound_child + $outbound_infant;
+
+	$inbound = array(
+					"total_cost" => $inbound_total_cost,
+					"api_cost" => $inbound_total_cost,
+					"actual_cost" => ""
+				);
+	$outbound = array(
+					"total_cost" => $outbound_total_cost,
+					"api_cost" => $outbound_total_cost,
+					"actual_cost" => ""
+				);
+
+	return array("inbound" => $inbound, "outbound" => $outbound);
+}
 
 }
