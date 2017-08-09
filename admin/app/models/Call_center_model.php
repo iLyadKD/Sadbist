@@ -57,11 +57,14 @@ class Call_center_Model extends CI_Model {
 
 		$status      = $this->session->userdata("status");
 		$assigned_to = $this->session->userdata("assigned_to");
+		$user_type = $this->session->userdata(SESSION_PREPEND . "user_type");
+		$current_user_id = $this->session->userdata(SESSION_PREPEND . "id");
 
 		if($status == ""){
 			$status = 4; //purchased
 			$this->session->set_userdata("status",$status);
 		}
+
 		if($assigned_to == ""){
 			$assigned_to = "";
 			$this->session->set_userdata("assigned_to",$assigned_to);
@@ -74,10 +77,17 @@ class Call_center_Model extends CI_Model {
 		$this->db->join('booking_details bd','cc.booking_id = bd.id');
 		$this->db->join('bookings bk','bd.id = bk.id');
 		$this->db->join('cc_status_master sm','sm.id = cc.status');
-		$this->db->where("cc.status",$status);
-		$this->db->where("cc.assigned_to",$assigned_to);
+		
+
 		if($id != ""){
 			$this->db->where('cc.id',$id);
+		}else{
+			if ($status != 'all') {
+				$this->db->where("cc.status",$status);
+			}
+			if ($assigned_to != 'all') {
+				$this->db->where("cc.assigned_to",$assigned_to);
+			}
 		}
 
 		$get = $this->db->get();
@@ -86,6 +96,7 @@ class Call_center_Model extends CI_Model {
 
 			$response = array("count" => $get->num_rows(), "result" => $data);
 		}
+
 		return $response;
 	}
 
@@ -158,9 +169,6 @@ class Call_center_Model extends CI_Model {
 			    break;	
 		}
 
-		if($status_id > 3 && $a == 0){
-			return 0;
-		}
 
 		$this->db->where('id',$id);
 		$this->db->update('cc_items',$add);
@@ -172,7 +180,10 @@ class Call_center_Model extends CI_Model {
 		// echo '<pre>',print_r($data);exit; 
 		$id        = $data['item_id'];
 		$add['status']       = $status_id = $data['cc_status'];
-		$add['actual_purchase_price'] = $data['actual_price'];
+		if (isset($data['actual_price'])) {
+			$add['actual_purchase_price'] = $data['actual_price'];
+		}
+		$add['item_comments'] = $data['item_comments'];
 		if(isset($data['assigned_to'])){
 			$add['assigned_to']  = $data['assigned_to'];
 		}
@@ -227,9 +238,9 @@ class Call_center_Model extends CI_Model {
 			    break;	
 		}
 
-		if($status_id > 3 && $a == 0){
-			return 0;
-		}
+		// if($status_id > 3 && $a == 0){
+		// 	return 0;
+		// }
 
 		$this->db->where('id',$id);
 		$this->db->update('cc_items',$add);
@@ -279,8 +290,14 @@ class Call_center_Model extends CI_Model {
 		if($id != ""){
 			$this->db->where('id',$id);
 		}
+		$this->db->where('id <> 1');
+		$this->db->where('id <> 6');
 		$this->db->where('id <> 9');
 		return $this->db->get('cc_status_master')->result();
+	}
+
+	public function getSMSList(){
+		return $this->db->get('sms_templates')->result();
 	}
 
 	public function getPaymentTrans($book_id = ""){

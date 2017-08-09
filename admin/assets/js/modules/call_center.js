@@ -1,5 +1,29 @@
 require(["custom_defination"], function(custom_fn)
 {
+
+
+	function setCookie(cname, cvalue, exdays) {
+	    var d = new Date();
+	    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+	    var expires = "expires="+ d.toUTCString();
+	    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+	}
+
+	function getCookie(cname) {
+	    var name = cname + "=";
+	    var ca = document.cookie.split(';');
+	    for(var i = 0; i < ca.length; i++) {
+	        var c = ca[i];
+	        while (c.charAt(0) == ' ') {
+	            c = c.substring(1);
+	        }
+	        if (c.indexOf(name) == 0) {
+	            return c.substring(name.length, c.length);
+	        }
+	    }
+	    return "";
+	}
+
 	$(document).ready(function()
 	{
 		// Global variables
@@ -8,7 +32,26 @@ require(["custom_defination"], function(custom_fn)
 		var asset_url          = $("head").data("asset-url");
 		var current_controller = $("head").data("controller");
 		var current_method     = $("head").data("method");
-	
+		var user_type		   = $("head").data("cc-user-type"); // GET USER TYPE
+		var filtered_data = null;
+		var filtered_data_count = null;
+
+		var selected_auto_refresh = getCookie('auto_refresh') ? getCookie('auto_refresh') : 10;
+		if (user_type == 1 || user_type ==2) {
+			if ($('.item-data-refresh').html()) {
+				setInterval( function() {
+					if (
+					    !$('#assignsmsModal').hasClass('in') &&
+					    !$('#cancelsmsModal').hasClass('in') &&
+					    !$('#set-auto-refresh').hasClass('in') &&
+					    !$('#assignsmsModal').hasClass('filtering') &&
+					    $('#items_tab').hasClass('active')
+					   ) {
+						$('.item-data-refresh').click();
+					}
+				}, selected_auto_refresh * 1000 ); // if user is an admin, Refresh page every 10 seconds
+			}
+		}
 		
 		if($("form.add_callcenter_staff_form").length > 0)
 			custom_fn.load_validate("add_callcenter_staff_form");
@@ -92,9 +135,88 @@ require(["custom_defination"], function(custom_fn)
 		// 	$('#item_val_status').val($(this).data('item'));
 		// });
 
+
+		//set auto refresh form
+		$('#set-auto-refresh-form').submit(function(e){
+			e.preventDefault();
+			var auto_refresh_val = $('#set-auto-refresh-form').find('#auto_refresh').val();
+			setCookie('auto_refresh', auto_refresh_val , 1000);
+			location.reload();
+		});
+
+		//send sms form submit
+		$('#cancel-sms-form').submit(function(e){
+			e.preventDefault();
+			var current_flight_ids = $("table.manage_cc_items").DataTable().columns({ filter : 'applied'}).data()[2];
+
+			if (!confirm('Are You Sure You Want To Send Cancel Message To ' + current_flight_ids.length + ' Customers?')) { return; }
+
+			data = $( this ).serializeArray(); 
+			data.push({name: "items_val", value: JSON.stringify(current_flight_ids)});
+			data.push({name: "cancel", value: 1});
+			url1 = base_url+current_controller+"/prepare_sms_to_current_items"+default_ext;
+			$.ajax({
+				url: url1,
+				data: $.param(data),
+				type: 'POST',
+				dataType: 'json',
+				success: function(data){
+					if(data.response > 0){
+						custom_fn.show_status_msg('success', 'Success', 'Send Messages successfully !');
+						custom_fn.set_auto_close(4000);
+						// location.reload();
+					}
+				}
+			});
+
+			return false;
+		});
+
+		//send sms form submit
+		$('#assign-sms-form').submit(function(e){
+			e.preventDefault();
+			var current_flight_ids = $("table.manage_cc_items").DataTable().columns({ filter : 'applied'}).data()[2];
+
+			if (!confirm('Are You Sure You Want To Send Delay Message To ' + current_flight_ids.length + ' Customers?')) { return; }
+
+			data = $( this ).serializeArray(); 
+			data.push({name: "items_val", value: JSON.stringify(current_flight_ids)});
+			data.push({name: "new_date", value: $('#delay-new-date').val()});
+			data.push({name: "new_time", value: $('#delay-new-time').val()});
+			url1 = base_url+current_controller+"/prepare_sms_to_current_items"+default_ext;
+			$.ajax({
+				url: url1,
+				data: $.param(data),
+				type: 'POST',
+				dataType: 'json',
+				success: function(data){
+					if(data.response > 0){
+						custom_fn.show_status_msg('success', 'Success', 'Send Messages successfully !');
+						custom_fn.set_auto_close(4000);
+						// location.reload();
+					}
+				}
+			});
+
+			return false;
+		});
+
+		function enable_disable_inputs() {
+			var status = $('#cc_status').val();
+			if (status == 10) {
+				$('.book-details').find('input, a, button').prop('disabled', false);
+				$('.book-details').addClass('has-success');
+			}else{
+				$('.book-details').find('input, a, button').prop('disabled', true);
+				$('.book-details').removeClass('has-success');
+			}
+		}
+		$('#inboundClicked').click();
+		enable_disable_inputs();
 		//dynamic inputs according to selected status
 		$('#cc_status').change(function(){
-			var status = $(this).val();
+			enable_disable_inputs();
+			return false;
 			if(status != "" || status != 0){
 				$.ajax({
 					url: base_url+current_controller+"/getInputElements"+default_ext,
@@ -111,6 +233,15 @@ require(["custom_defination"], function(custom_fn)
 			}
 			return false;
 		});
+
+		$('#cc_sms_type').change(function(){
+			$(".sms_type[id^='sms_']").each(function( index ) {
+			  $(this).css('display','none');
+			});
+			$('#sms_' + $(this).val() ).css('display','block');
+			return false;
+		});
+
 
 		//update-status-form
 		$(document).on("click", "#update-btn-form", function(submit_event){
@@ -317,15 +448,55 @@ require(["custom_defination"], function(custom_fn)
 
 	});
 
+	$("table.manage_cc_items").DataTable().search("").draw();
 	if($("table.manage_cc_items").length > 0){
-			$("table.manage_cc_items").dataTable({
-				"dom": "lfrtip",
-				"iDisplayLength": 50,
-				"bStateSave": true,
-				"aLengthMenu": [[10, 25, 50, 75, -1], [10, 25, 50, 75, "All"]],
-				"ordering": true,
-				// "aoColumnDefs": [{"bSearchable": false, "aTargets": [0, 6, 7]}]
-			});
+		var table = $("table.manage_cc_items").DataTable({
+			"dom": "lfrtip",
+			"iDisplayLength": 50,
+			"bStateSave": true,
+			"aLengthMenu": [[10, 25, 50, 75, -1], [10, 25, 50, 75, "All"]],
+			"ordering": true,
+			// "aoColumnDefs": [{"bSearchable": false, "aTargets": [0, 6, 7]}]
+		});
+		
+		
+		title = $('table.manage_cc_items tfoot th:nth-child(2)').text();
+		$('table.manage_cc_items tfoot th:nth-child(2)').html( '<input type="text" placeholder="Search '+ title +'" />' );
+
+		title = $('table.manage_cc_items tfoot th:nth-child(3)').text();
+		$('table.manage_cc_items tfoot th:nth-child(3)').html( '<input type="text" placeholder="Search '+ title +'" />' );
+		
+		title = $('table.manage_cc_items tfoot th:nth-child(6)').text();
+		$('table.manage_cc_items tfoot th:nth-child(6)').html( '<input type="text" placeholder="Search '+ title +'" />' );
+		
+		var title = $('table.manage_cc_items tfoot th:nth-child(7)').text();
+		$('table.manage_cc_items tfoot th:nth-child(7)').html( '<input type="text" placeholder="Search '+ title +'" />' );
+
+		title = $('table.manage_cc_items tfoot th:nth-child(8)').text();
+		$('table.manage_cc_items tfoot th:nth-child(8)').html( '<input type="text" placeholder="Search '+ title +'" />' );
+		
+
+		table.on('search.dt', function() {
+			//number of filtered rows
+			filtered_data_count = table.rows( { filter : 'applied'} ).nodes().length;
+			//filtered rows data as arrays
+			filtered_data = table.rows( { filter : 'applied'} ).data();
+		})
+
+		// Apply the search
+		table.columns().every( function () {
+			var that = this;
+			$( 'input', this.footer() ).on( 'keyup change', function () {
+				if ( that.search() !== this.value ) {
+					if (this.value != '') {
+						$('#assignsmsModal').addClass('filtering');
+					}else{
+						$('#assignsmsModal').removeClass('filtering');
+					}
+					that.search( this.value ).draw();
+				}
+			} );
+		});
 	}
 
 
@@ -337,7 +508,7 @@ require(["custom_defination"], function(custom_fn)
 	var dt = new Date();
 	var adult_age = dt.getFullYear() - 12;
 	dt.setFullYear(adult_age);
-	var dateFormat = "dd-mm-yy";
+	var dateFormat = "yy/mm/dd";
 	$(".dt_dob.adult").datepicker(
 	{	
 		dateFormat: dateFormat,
@@ -383,7 +554,7 @@ require(["custom_defination"], function(custom_fn)
 	if($(".from_current_date").length > 0)
 		$(".from_current_date").datepicker(
 		{	
-			dateFormat: "dd/mm/yy",
+			dateFormat: "yy/mm/dd",
 			minDate: 1,
 			changeMonth: true,
 			showButtonPanel: true,
