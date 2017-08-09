@@ -1,0 +1,40 @@
+.color_eb4614 > td{
+	background-color: #eb4614 !important;
+	border-color: #eb4614 !important;
+	color:white ;
+}
+.color_ac4313 > td{
+	background-color: #ac4313 !important;
+	border-color: #ac4313 !important;
+}
+.color_a910f2 > td{
+	background-color: #a910f2 !important;
+	border-color: #a910f2 !important;
+}
+.color_09a618 > td{
+	background-color: #09a618 !important;
+	border-color: #09a618 !important;
+}
+.color_f9019a > td{
+	background-color: #f9019a !important;
+	border-color: #f9019a !important;
+}
+
+tfoot {
+	display: table-header-group;
+}
+tfoot input {
+	width: 100%;
+	padding: 3px;
+	box-sizing: border-box;
+}
+.abed-container {
+  display: flex;
+  flex-direction: column;
+}
+.abed-item1 {
+  order: 1;
+}
+.abed-item2 {
+  order: 2;
+}
