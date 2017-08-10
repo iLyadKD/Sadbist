@@ -38,3 +38,42 @@ tfoot input {
 .abed-item2 {
   order: 2;
 }
+/*******************************************************
+Kooosha's Works****************************************/
+
+.in-out-btm {
+   text-align: right;
+}
+
+#inbound0, 
+#outbound0 {
+   zoom:1.5;
+}
+
+.last-row {
+ padding: 5px;
+}
+
+.Last-Row-CheckBox {
+text-align: center;
+
+}
+
+#adult_salutation {
+min-height: 35px;
+}
+
+.lable-assign-status {
+   display: block;
+}
+
+#item_comments {
+   background: #66cdaa;
+}
+
+@media screen and (min-width: 900px) {
+    #Out-Checkbox {
+        margin-left: -5%;
+    }
+}
+
