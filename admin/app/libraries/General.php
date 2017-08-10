@@ -105,7 +105,7 @@ class General {
 	/* Get active airports */
 	public function get_airports($code = "", $search = "", $page = "1", $lang = DEFAULT_LANG)
 	{
-		$query = "SELECT CONCAT(`airport_".$lang."`, ', ', `city_".$lang."`) AS `text`, `airport_code` as `id` FROM `flight_airports` WHERE `status` = '1'";
+		$query = "SELECT CONCAT(`airport_".$lang."`, ', ', `city_".$lang."`) AS `text`, `airport_code` as `id`, `city_".$lang."` as `city_text` FROM `flight_airports` WHERE `status` = '1'";
 		if($code !== "")
 			$query .= " AND `airport_code` = '$code'";
 		if($search !== "")
@@ -116,6 +116,42 @@ class General {
 		{
 			$query .= " ORDER BY FIELD(`city_code`, '$search') DESC, FIELD(`airport_code`, '$search') DESC, FIELD(`city_".$lang."`, '$search'), FIELD(`airport_".$lang."`, '$search')";
 			$query .= " LIMIT ".(($page - 1) * 10).", 10";
+			$result = $this->CI->db->query($query);
+			$airports = $result->result();
+		}
+		return $total_airports > 0 ? array("total" => $total_airports, "results" => $airports) : array("total" => "0", "results" => array());
+	}
+
+	/* Get active airports */
+	public function get_flight_airport($code = "", $lang = DEFAULT_LANG)
+	{
+		$query = "SELECT `city_".$lang."` AS `text`, `airport_code` as `id`, `city_".$lang."` as `city_text` FROM `flight_airports` WHERE `status` = '1'";
+		if($code !== "")
+			$query .= " AND `airport_code` = '$code'";
+		$total_airports = $this->CI->db->query($query)->num_rows();
+		$airports = array();
+		if($total_airports > 0)
+		{
+			$query .= " ORDER BY `city_code` DESC";
+			$query .= " LIMIT 1";
+			$result = $this->CI->db->query($query);
+			$airports = $result->result();
+		}
+		return $total_airports > 0 ? array("total" => $total_airports, "results" => $airports) : array("total" => "0", "results" => array());
+	}
+
+	/* Get active airports */
+	public function get_flight_airport_by_name($name = "", $lang = DEFAULT_LANG)
+	{
+		$query = "SELECT `city_".$lang."` AS `text`, `airport_code` as `id`, `city_".$lang."` as `city_text` FROM `flight_airports` WHERE `status` = '1'";
+		if($name !== "")
+			$query .= " AND `city_".$lang."` = '$name'";
+		$total_airports = $this->CI->db->query($query)->num_rows();
+		$airports = array();
+		if($total_airports > 0)
+		{
+			$query .= " ORDER BY city_".$lang." DESC";
+			$query .= " LIMIT 1";
 			$result = $this->CI->db->query($query);
 			$airports = $result->result();
 		}

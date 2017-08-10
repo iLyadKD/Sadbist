@@ -364,8 +364,8 @@ class Call_center extends CI_Controller {
 			}
 			if ($item_info) {
 				$departure    = json_decode($item_info->departures)[0];
-				$departure->departure_from = $post['from'];
-				$departure->arrival_to = $post['to'];
+				$departure->departure_from = $this->get_english_code_text($post['from']);
+				$departure->arrival_to = $this->get_english_code_text($post['to']);
 				$departure->airline_name = $post['airline_name'];
 				$departure->departure_dttm = date('Y-m-d h:i:s', strtotime(str_replace('/', '-', $post['flight_date'] .' '. $post['flight_time'])));
 				$departures[0] = $departure;
@@ -838,6 +838,19 @@ class Call_center extends CI_Controller {
 		                                   'isflash' => false,
 		                                ) );
 		return isset($result->recId->long) ? 1 : 0;
+	}
+	function get_actual_english_text($code='THR')
+	{
+		$airports = $this->general->get_flight_airport($code, 'en');
+		$first_found = $airports['results'] ? ($airports['results'][0] ? $airports['results'][0] : null) : null;
+		return $first_found->text;
+	}
+
+	function get_english_code_text($name='تهران')
+	{
+		$airports = $this->general->get_flight_airport_by_name($name, 'en');
+		$first_found = $airports['results'] ? ($airports['results'][0] ? $airports['results'][0] : null) : null;
+		return $first_found->id;
 	}
 
 	function get_actual_text($code='THR', $lang="fa")

@@ -117,11 +117,9 @@
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" <?php echo !$has_permission && $dataCharter == '' ? 'disabled' : '' ?> value="<?php echo 1000 + $item_det->item_id;?>" type="text" name="charter_com_ref_number" >
 													</div>
 													<?php if ($item_det->flight_type == 'Return') { ?>
-
 													<div class="col-sm-4 controls in-out-btm">
 														<a id="outboundClicked" href="#" class="btn">Outbound</a>
 														<a id="inboundClicked" href="#" class="btn">Inbound</a>
-
 													</div>
 													<?php } ?>
 													
@@ -161,12 +159,12 @@
 												<div class="form-group book-details">
 													<div class="col-sm-2 controls">
 														<label>From:</label>
-														<input name="from" autofocus="true" class="form-control" type="text" disabled value="<?php echo $CI->get_actual_text($departures->departure_from); ?>">
+														<input name="from" autofocus="true" class="form-control" type="text" disabled value="<?php echo $CI->get_actual_english_text($departures->departure_from); ?>">
 													</div>
 
 													<div class="col-sm-2 controls">
 														<label>To:</label>
-														<input name="to" autofocus="true" class="form-control" type="text" disabled value="<?php echo $CI->get_actual_text($departures->arrival_to); ?>">
+														<input name="to" autofocus="true" class="form-control" type="text" disabled value="<?php echo $CI->get_actual_english_text($departures->arrival_to); ?>">
 													</div>
 
 													<div class="col-sm-2 controls">
@@ -205,27 +203,22 @@
 
 															<div class="col-sm-2 controls">
 																<label>Sold  (<?php echo $item_det->currency;?>):</label>
-
 																<input disabled autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" name="outbound_total_cost" value="<?php echo isset($outbound_json->total_cost) ? number_format($outbound_json->total_cost) : '' ; ?>">
-
 															</div>
 
 															<div class="col-sm-2 controls">
 																<label>Listed (<?php echo $item_det->currency;?>):</label>
 																<input disabled autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" name="outbound_api_cost" value="<?php echo isset($outbound_json->api_cost) ? number_format($outbound_json->api_cost): '' ; ?>">
-
 															</div>
 
 															<div class="col-sm-2 controls">
 																<label>Actual (<?php echo $item_det->currency;?>):</label>
 																<input disabled autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" value="<?php echo (isset($outbound_json->actual_cost) && $outbound_json->actual_cost != "") ? number_format($outbound_json->actual_cost) : ''; ?>" <?php echo !$has_permission ? '' : 'name="outbound_actual_cost"'?>>
-
 															</div>
 
 															<div class="col-sm-2 controls">
 																<label>Profit (<?php echo $item_det->currency;?>):</label>
 																<input id="profit" autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" disabled value="<?php echo isset($outbound_json->total_cost) ? number_format($outbound_json->total_cost - $outbound_json->actual_cost) : ''; ?>">
-
 															</div>
 
 															<div class="col-sm-2 controls">
@@ -244,25 +237,21 @@
 															<div class="col-sm-2 controls">
 																<label>Sold  (<?php echo $item_det->currency;?>):</label>
 																<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" name="inbound_total_cost" value="<?php echo isset($inbound_json->total_cost) ? number_format($inbound_json->total_cost): '' ; ?>">
-
 															</div>
 
 															<div class="col-sm-2 controls">
 																<label>Listed (<?php echo $item_det->currency;?>):</label>
 																<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" name="inbound_api_cost" value="<?php echo isset($inbound_json->api_cost) ? number_format($inbound_json->api_cost) :'' ; ?>">
-
 															</div>
 
 															<div class="col-sm-2 controls">
 																<label>Actual (<?php echo $item_det->currency;?>):</label>
 																<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" <?php echo $enabled ?> value="<?php echo (isset($inbound_json->actual_cost) && $inbound_json->actual_cost != "") ? number_format($inbound_json->actual_cost) : ''; ?>" <?php echo !$has_permission ? '' : 'name="inbound_actual_cost"'?>>
-
 															</div>
 
 															<div class="col-sm-2 controls">
 																<label>Profit (<?php echo $item_det->currency;?>):</label>
 																<input id="profit" autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" disabled value="<?php echo isset($inbound_json->total_cost) ? number_format($inbound_json->total_cost - $inbound_json->actual_cost) : ''; ?>">
-
 															</div>
 
 															<div class="col-sm-2 controls">
@@ -283,26 +272,22 @@
 													<div class="col-sm-2 controls">
 														<label>Sold  (<?php echo $item_det->currency;?>):</label>
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" disabled value="<?php echo number_format(intval(@$outbound_json->total_cost) + intval(($is_return ? @$inbound_json->total_cost : 0))); ?>">
-
 													</div>
 
 													<div class="col-sm-2 controls">
 														<label>Listed (<?php echo $item_det->currency;?>):</label>
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" disabled value="<?php echo number_format(intval(@$outbound_json->api_cost) + intval(($is_return ? @$inbound_json->api_cost : 0))); ?>">
-
 													</div>
 
 													<div class="col-sm-2 controls">
 														<label>Actual (<?php echo $item_det->currency;?>):</label>
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" disabled <?php echo $enabled ?> value="<?php echo (isset($outbound_json->actual_cost) && $outbound_json->actual_cost != "") ? number_format(intval(@$outbound_json->actual_cost) + intval(($is_return ? @$inbound_json->actual_cost : 0))) : ''; ?>">
-
 													</div>
 
 													<div class="col-sm-2 controls">
 														<label>Profit (<?php echo $item_det->currency;?>):</label>
 														<?php $diff = isset($outbound_json->total_cost) ? intval($outbound_json->total_cost) + intval(($is_return ? @$inbound_json->total_cost : 0)) - (intval($outbound_json->actual_cost) + intval(($is_return ? @$inbound_json->actual_cost : 0))) : '' ?>
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" disabled value="<?php echo ($diff != "") ? number_format(intval($diff)) : ''; ?>">
-
 													</div>
 
 												</div>
@@ -351,7 +336,6 @@
 												        </div>
                                                                                                         <div class="col-sm-2 controls">
                                                                                                                 <label class="lable-assign-status">Change Status</label>
-
 														<a tabindex="14" class="btn btn-primary update-status-btn has-tooltip" href="javascript:void(0);" data-original-title="Change Status" data-toggle="modal" data-target="#update-status" <?php echo $has_admin_permission ? '' : 'disabled' ?> data-item="<?php echo $item_det->item_id;?>" >
 															<i class="icon-save"></i>
 															Change Status
@@ -396,13 +380,11 @@
 												
 												<div class="form-group">
 													<div class="col-sm-1 controls last-row">
-
 														<?php echo $index == 0 ? '<label>Type</label>' : '' ?>
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" disabled value="<?php echo ucfirst($pvalue); ?>" type="text">
 													</div>
 
 													<div class="col-sm-1 controls last-row">
-
 														<?php echo $index == 0 ? '<label>Title</label>' : '' ?>
 														<select <?php echo $enabled ?> style="width:100% !important;" data-rule-required="true" data-msg-required="<?php echo $this->lang->line("required_star"); ?>" <?php echo !$has_permission ? '' : 'name="traveller_det[' . $pvalue . '_salutation][]"' ?> title="<?php echo $this->lang->line("title"); ?>" class="select2" id="adult_salutation" >
 															<option <?php echo $salutation[$i] === "0" ? "selected" : ""; ?> value="0"><?php echo $this->lang->line("mr");
@@ -419,13 +401,11 @@
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" <?php echo $enabled ?> value="<?php echo $fname[$i]; ?>" <?php echo !$has_permission ? '' : 'name="traveller_det[' . $pvalue . '_fname][]"' ?> >
 													</div>
 													<div class="col-sm-1 controls last-row">
-
 														<?php echo $index == 0 ? '<label>Last Name</label>' : '' ?>
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" <?php echo $enabled ?> value="<?php echo $lname[$i]; ?>" <?php echo !$has_permission ? '' : 'name="traveller_det[' . $pvalue . '_lname][]"' ?> >
 													</div>
 
 													<div class="col-sm-1 controls last-row">
-
 														<?php echo $index == 0 ? '<label>Persian Name</label>' : '' ?>
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" <?php echo $enabled ?> value="<?php echo $name_fa[$i]; ?>" <?php echo !$has_permission ? '' : 'name="traveller_det[' . $pvalue . '_name_fa][]"' ?> >
 													</div>
@@ -436,7 +416,6 @@
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control dt_dob <?php echo $pvalue;?>" type="text" <?php echo $enabled ?> value="<?php echo date('Y/m/d', strtotime($dob[$i])); ?>" <?php echo !$has_permission ? '' : 'name="traveller_det[' . $pvalue . '_dob][]"' ?> >
 													</div>
 													<div class="col-sm-2 controls last-row">
-
 														<?php echo $index == 0 ? '<label>Nationality</label>' : '' ?>
 														<select <?php echo $enabled ?> <?php echo !$has_permission ? '' : 'name="traveller_det[' . $pvalue . '_nationality][]"' ?> class="form-control select2 pax_country" data-rule-required="true" data-class="<?php echo $pvalue.$i;?>">
 															<?php 
@@ -454,13 +433,11 @@
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" <?php echo $enabled ?> value="<?php echo $nat_id[$i]; ?>" <?php echo !$has_permission ? '' : 'name="traveller_det[' . $pvalue . '_national_id][]"' ?> >
 													</div>
 													<div class="col-sm-1 controls last-row <?php echo $pvalue.$i;?> non_iran_class" style="display:<?php echo $pass_display; ?>">
-
 														<?php echo $index == 0 ? '<label>Passport No:</label>' : '' ?>
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control" type="text" <?php echo $enabled ?> value="<?php echo $passport_num[$i]; ?>" <?php echo !$has_permission ? '' : 'name="traveller_det[' . $pvalue . '_passport][]"' ?> >
 													</div>
 													
 													<div class="col-sm-1 controls last-row <?php echo $pvalue.$i;?> non_iran_class" style="display:<?php echo $pass_display; ?>">
-
 														<?php echo $index == 0 ? '<label>Expiry Date</label>' : '' ?>
 														<input autocomplete="off" tabindex="1" autofocus="true" class="form-control from_current_date" type="text" <?php echo $enabled ?> value="<?php echo date('Y/m/d',strtotime(str_replace('/', '-', @$passport_expire[$i]))); ?>" <?php echo !$has_permission ? '' : 'name="traveller_det[' . $pvalue . '_passport_expire][]"'?> >
 													</div>
@@ -468,7 +445,6 @@
 
 
 													<div class="col-sm-1 controls last-row Last-Row-CheckBox">
-
 														<?php echo $index == 0 ? '<label>IN</label>' : '';
 														$status = (isset($inbound[$i]) && $inbound[$i] === "on") ? "checked='checked'" : "";
 														 ?>
@@ -479,7 +455,6 @@
 													</div>
 
 													<div class="col-sm-1 controls last-row Last-Row-CheckBox" id="Out-Checkbox">
-
 														<?php echo $index == 0 ? '<label>Out</label>' : '';
 														$status = (isset($outbound[$i]) && $outbound[$i] === "on") ? "checked='checked'" : "";
 														 ?>

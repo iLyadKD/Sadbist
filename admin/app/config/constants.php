@@ -155,3 +155,8 @@ define("QUICK_LINK_PAGE", "1");
 define("TRAVELLER_TOOL_PAGE", "2");
 define("LEGAL_PAGE", "3");
 define("ABOUT_10020_PAGE", "4");
+
+// REDIRECTION
+define("REDIRECTION_URL", "http://sepehr360.com");
+define("GREGORIAN_EPOCH", "1721425.5");
+define("PERSIAN_EPOCH", "1948320.5");
