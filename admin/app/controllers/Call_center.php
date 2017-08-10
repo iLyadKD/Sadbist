@@ -19,12 +19,18 @@ class Call_center extends CI_Controller {
 	*/	
 	public function index()
 	{	
+
 		$data = $this->Call_center_model->getItemList(); 
 
 		$data['staffs'] = $this->Call_center_model->getStaffList();
 		$data['status_list'] = $this->Call_center_model->getStatusList();
 		$data['status_sess']      = $this->session->userdata("status");
 		$data['assigned_to_sess'] = $this->session->userdata("assigned_to");
+		$data['user_type'] = $this->session->userdata(SESSION_PREPEND . 'user_type');
+
+		$this->load->model('sms_model');
+		$data['sms_types_list'] = $this->sms_model->getAllData();
+		
 
 		$data1 = array();
 		$myCallback = function($key) use(&$data1){
@@ -118,6 +124,25 @@ class Call_center extends CI_Controller {
 				// 	$updateData['dt_new'] = date("Y-m-d H:i:s");
 				// 	break;
 				case 1 : //reserved or payment success bookings 	
+
+					$input_json    = json_decode($value->input_json);
+					$traveller_det = json_decode($value->traveller_json,true);
+					$departure    = json_decode($value->departures)[0];
+					$people_count = $input_json->adult + $input_json->child + $input_json->infant;
+
+					$data = array();
+					$data['flight_number'] = $value->pnr_number;
+					$data['from'] = $this->get_actual_text($departure->departure_from);
+					$data['to'] = $this->get_actual_text($departure->arrival_to);
+					$data['purchased_date'] = $value->booked_date;
+					$data['purchased_time'] = date('h:i', strtotime($departure->departure_dttm));
+					$data['people_count'] = $people_count + ' نفر';
+					$data['booking_ref'] = (1000 + $value->id);
+					
+					$data['contact'] = $value->contact;
+					
+					$this->send_sms($data);
+
 					$paymentDetail = $this->Call_center_model->getPaymentTrans($value->id);
 					$payData = $paymentDetail->row();
 					$updateData['status']  = 4; // mark as purchased in call center
@@ -147,7 +172,7 @@ class Call_center extends CI_Controller {
 
 
 			$updateData['booking_id'] = $book_id;
-			$updateData['created_date'] = $datetime;
+			// $updateData['created_date'] = $datetime;
 			$updateData['updated_date'] = $datetime;
 
 			if($book_id != false){
@@ -182,6 +207,56 @@ class Call_center extends CI_Controller {
 	}
 
 	/*
+	* Prepare SMS To Current Items
+	*/
+	public function prepare_sms_to_current_items(){
+		$this->load->model('sms_model');
+		$this->load->helper('persian_date');
+		
+		$item = $this->input->post();
+		$items_val          = json_decode($item['items_val']);
+
+
+		$is_cancel = isset($item['cancel']) ? 1 : 0;
+		$new_time = isset($item['new_time']) ? $item['new_time'] : 0;
+		$new_date = isset($item['new_date']) ? $item['new_date'] : 0;
+
+		if($items_val != ""){
+			
+			$sent_msgs = array();
+			foreach ($items_val as $key => $flight_ref_no) {
+				$flight_item_id = $flight_ref_no - 1000;
+				$item_info = $this->Call_center_model->getItemList($flight_item_id)['result'][0];
+				if ($item_info) {
+					
+					$departures    = json_decode($item_info->departures)[0];
+					$from = $this->get_actual_text($departures->departure_from);
+					$to = $this->get_actual_text($departures->arrival_to);
+					$airline_name = $departures->airline_name;
+					$date = to_date(date('Y/m/d', strtotime($departures->departure_dttm)), 'Y/m/d');
+
+					if ($departures && $is_cancel) {
+						$message = "مسافرين محترم پرواز شماره ".$item_info->pnr_number." مسير ".$from." - ".$to." عباس  مورخ ".$date." ضمن عرض پوزش به اطلاع ميرساند پرواز شما به علت محدوديت عملياتي باطل اعلام ميگردد. با تشكر \nهواپيمائي ".$airline_name." \nجهت کسب اطلاعات بیشتر با بخش پشتیبانی تماس حاصل فرمایید. \n02154623000";
+					}else{
+						$message = "مسافرين محترم پرواز شماره  ".$item_info->pnr_number." مسير ".$from." - ".$to." مورخ  ".$date." ضمن عرض پوزش به اطلاع ميرساند پرواز شما به علت تأخير در ورود از مسير قبل با تأخير در ساعت  ".$new_time." مورخ ".$new_date." انجام  ميگردد. با تشكر \nهواپيمائي نفت ايران";
+					}
+					$this->send_sms_msg($message, $item_info->contact);
+					// $sent_msgs[] = $message;
+				}
+			}
+
+			$sent_msgs_count = count($sent_msgs);
+			if(count($sent_msgs) > 0){
+				echo json_encode(array('response' => $sent_msgs_count, 'sent' => $sent_msgs));exit;
+			}else{
+				echo json_encode(array('response' => 0, 'sent' => array()));exit;
+			}
+		}
+
+		echo 0;exit;
+	}
+
+	/*
 	* Get Item Details
 	*/
 	public function item_details($id){
@@ -192,11 +267,20 @@ class Call_center extends CI_Controller {
 		$data['item_det']      = $details['result'][0];
 		$data['traveller_det'] = json_decode($data['item_det']->traveller_json,true);
 		$data['departures']    = json_decode($data['item_det']->departures)[0];
+		$arrivals    = json_decode($data['item_det']->arrivals);
+		if (count($arrivals)) {
+			$data['arrivals']    = $arrivals[0];
+		}
 		$data['country']       = $this->Call_center_model->get_country();
 		$data['staff']         = array();
 		if($data['item_det']->assigned_to != ""){
 			$data['staff']    = $this->Call_center_model->getStaff($data['item_det']->assigned_to);
 		}
+		$user_type = $this->session->userdata(SESSION_PREPEND . "user_type");
+		$current_user_id = $this->session->userdata(SESSION_PREPEND . "id");
+
+		$data['has_permission'] = ($data['item_det']->assigned_to == $current_user_id || $user_type == SUPER_ADMIN_USER || $user_type == ADMIN_USER);
+		$data['has_admin_permission'] = $user_type == SUPER_ADMIN_USER || $user_type == ADMIN_USER;
 
 		if($details){
 			$this->load->view('call_center/details',$data);
@@ -224,11 +308,11 @@ class Call_center extends CI_Controller {
 	* Update Item Details
 	*/
 	public function update_item_details(){
+		$this->load->helper('persian_date');
 		$post = $this->input->post();
 		// echo '<pre>',print_r($post);exit; 
 		//response msg
 		$response = array("status" => "Failed", "msg_status" => "danger",  "msg" => "Not updated");
-
 
 		if(!empty($post) && $post['item_id'] != ""){
 
@@ -237,11 +321,60 @@ class Call_center extends CI_Controller {
 		$item_id = $itemKey[0];
 		$book_id = $itemKey[1];
 
-		$paxData['traveller_json'] = json_encode($post['traveller_det']);
 
+		$paxData['traveller_json'] = json_encode($post['traveller_det']);
+		
+		$inout_bound_data = array();
+
+		if (isset($post['inbound_total_cost'])) {
+			$paxData['inbound_pnr_number'] = $post['inbound_pnr_number'];
+			$inbound_total_cost = str_replace(',', '', $post['inbound_total_cost']);
+			$inbound_api_cost = str_replace(',', '', $post['inbound_api_cost']);
+			$inbound_actual_cost = str_replace(',', '', $post['inbound_actual_cost']);
+			$inbound = array(
+			                                     "total_cost" => $inbound_total_cost,
+			                                     "api_cost" => $inbound_api_cost,
+			                                     "actual_cost" => $inbound_actual_cost
+			                                     );
+			$paxData['inbound'] = json_encode($inbound);
+		}
+		if (isset($post['outbound_total_cost'])) {
+			$paxData['pnr_number'] = $post['cc_pnr_number'];
+			$outbound_total_cost = str_replace(',', '', $post['outbound_total_cost']);
+			$outbound_api_cost = str_replace(',', '', $post['outbound_api_cost']);
+			$outbound_actual_cost   = str_replace(',', '', $post['outbound_actual_cost']);
+			$outbound = array(
+			                                     "total_cost" => $outbound_total_cost,
+			                                     "api_cost" => $outbound_api_cost,
+			                                     "actual_cost" => $outbound_actual_cost
+			                                     );
+			$paxData['outbound'] = json_encode($outbound);
+		}
+		
 		$itemData['item_id']   = $item_id;
 		$itemData['cc_status'] = $post['cc_status'];
-		$itemData['actual_price']   = $post['actual_price'];
+		
+		$itemData['item_comments'] = $post['item_comments'];
+		
+		if (isset($post['from'])) {
+			$item_response = $this->Call_center_model->getItemList($item_id);
+			$item_info = null;
+			if ($item_response['count'] > 0) {
+				$item_info = $item_response['result'][0];
+			}
+			if ($item_info) {
+				$departure    = json_decode($item_info->departures)[0];
+				$departure->departure_from = $post['from'];
+				$departure->arrival_to = $post['to'];
+				$departure->airline_name = $post['airline_name'];
+				$departure->departure_dttm = date('Y-m-d h:i:s', strtotime(str_replace('/', '-', $post['flight_date'] .' '. $post['flight_time'])));
+				$departures[0] = $departure;
+				$paxData['departures'] = json_encode($departures);
+			}
+		}
+		if (isset($post['outbound_actual_cost'])) {
+			$itemData['actual_price']   = str_replace(',', '', $post['outbound_actual_cost']);
+		}
 		if(isset($post['cc_staffs']) && ($post['cc_staffs'] != "")){
 			$itemData['assigned_to'] = $post['cc_staffs'];
 		} 
@@ -264,6 +397,10 @@ class Call_center extends CI_Controller {
 			// else{
 			// 	$this->db->trans_rollback();
 			// }
+			
+			if ($post['cc_status'] == 5) {
+				$this->generate_tickets($item_id);
+			}
 		}
 		echo json_encode($response);exit;
 
@@ -433,6 +570,8 @@ class Call_center extends CI_Controller {
 	}
 
 	public function getInputElements(){
+		return; // stopped
+
 		$status = $this->input->post('status');
 		$html   = '';
 
@@ -469,4 +608,348 @@ class Call_center extends CI_Controller {
 		 return true;
 	}
 
+	public function generate_tickets($item_id)
+	{
+		$this->load->helper('persian_date');
+		$item_response = $this->Call_center_model->getItemList($item_id);
+		$item_info = null;
+		if ($item_response['count'] > 0) {
+			$item_info = $item_response['result'][0];
+		}
+		if(!$item_info){ return; }
+
+
+		$traveller_det = json_decode($item_info->traveller_json);
+		$departures    = json_decode($item_info->departures)[0];
+		$arrivals    = json_decode($item_info->arrivals)[0];
+		$input_json    = json_decode($item_info->input_json);
+		$people_count = count($traveller_det);
+
+		$data = array();
+
+		$data['from'] = $this->get_actual_text($departures->departure_from);
+		$data['to'] = $this->get_actual_text($departures->arrival_to);
+		$data['airline_name'] = $departures->airline_name;
+		$data['flight_date'] = date('y/m/d', strtotime($departures->departure_dttm));
+		$data['flight_time'] = date('h:i', strtotime($departures->departure_dttm));
+		$data['voucher'] = '-';
+
+		$data['contact'] = $item_info->contact;
+		$this->send_sms($data, true);
+
+
+		if ($item_info->flight_type == 'Return') {
+			$tickets_types = [$departures, $arrivals];
+		}else{
+			$tickets_types = [$departures];
+		}
+		$tickets = array();
+		for ($person_key=0; $person_key < count($traveller_det); $person_key++) { 
+		
+			if (is_array($traveller_det)) {
+				$traveller_det_copy = $traveller_det[$person_key];
+				$adult_fname = @$traveller_det_copy->adult_fname;
+				$adult_lname = @$traveller_det_copy->adult_lname;
+				$adult_name_fa = @$traveller_det_copy->adult_name_fa;
+			
+			}elseif (is_array(@$traveller_det->adult_fname)) {
+				$adult_fname = @$traveller_det->adult_fname[0];
+				$adult_lname = @$traveller_det->adult_lname[0];
+				$adult_name_fa = @$traveller_det->adult_name_fa[0];
+			}else{
+				$adult_fname = @$traveller_det->adult_fname;
+				$adult_lname = @$traveller_det->adult_lname;
+				$adult_name_fa = @$traveller_det->adult_name_fa;
+			}
+
+			foreach ($tickets_types as $key => $departure) {
+				$tickets[$person_key][] = (object) array(
+					'passenger_name' => $adult_fname . ' ' . $adult_lname ,
+					'passenger_name_fa' => $adult_name_fa ,
+					'type' => $key == 0 ? 1 : 2 , // 1 one way, 2 two ways
+					'booking_ref' => (1000 + $item_info->id) ,
+					'from' => $this->get_actual_text($departure->departure_from) ,
+					'to' => $this->get_actual_text($departure->arrival_to) ,
+					'fare' => '' ,
+					'payment' => $item_info->payment_details ,
+					'number' => $item_info->pnr_number , //$departure->flight_no ,
+					'date' => date('Y/m/d', strtotime($departure->departure_dttm)) ,
+					'date_fa' => to_date(date('Y/m/d', strtotime($departure->departure_dttm)), 'Y/m/d') ,
+					'carrier' => $departure->airline_name,
+					'flight' => $departure->airline_type ,
+					'issued_date' => date('Y/m/d', strtotime($item_info->booked_date)) ,
+					'issued_date_fa' => to_date(date('Y/m/d', strtotime($item_info->booked_date)), 'Y/m/d') ,
+					'remark' => '' ,
+					'class' => $departure->cabin_type ,
+					'time' => date('h:i', strtotime($departure->departure_dttm)) ,
+					'allow' => '20Kg' ,
+					'status' => 'OK' ,
+					'price' => '', //$item_info->total_cost ,
+					// 'barcode' => $this->create_barcode($item_info->book_id),
+				);	
+			}
+		}
+
+		$this->load->library('Pdf');
+		// create new PDF document
+		$pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+		// set document information
+		$pdf->SetCreator(PDF_CREATOR);
+		$pdf->SetAuthor('10020.ir');
+		$pdf->SetTitle('10020.ir');
+		$pdf->SetSubject('10020.ir');
+		$pdf->SetKeywords('10020.ir, PDF');
+
+		$lg = Array();
+		$lg['a_meta_charset'] = 'UTF-8';
+		$lg['a_meta_dir'] = 'rtl';
+		$lg['a_meta_language'] = 'fa';
+		// set some language-dependent strings (optional)
+		$pdf->setLanguageArray($lg);
+		// 
+		// set default header data
+		// پشتیبانی 56 ساعته
+		// 021 5462 3000
+		$pdf->setHeaderData('header.png');
+		// footer.png
+		// $pdf->setFooterData();
+	
+
+		$lg = Array();
+		$lg['a_meta_charset'] = 'UTF-8';
+		$lg['a_meta_dir'] = 'ltr';
+		$lg['a_meta_language'] = 'en';
+		// set some language-dependent strings (optional)
+		$pdf->setLanguageArray($lg);
+		
+		// set header and footer fonts
+		$pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
+		$pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+		// set default monospaced font
+		$pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+		// set margins
+		$pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+		$pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+		// $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+		// set auto page breaks
+		$pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+		// set image scale factor
+		$pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+		// set font
+		$pdf->SetFont('dejavusans', '', 20);
+
+		for ($person_key=0; $person_key < $people_count; $person_key++) { 
+			// add a page
+			$pdf->AddPage();
+
+
+			$data = array();
+			$data['tickets'] = $tickets[$person_key];
+			
+			$tbl = $this->load->view('call_center/ticket_template', $data, true);
+			$pdf->writeHTML($tbl, true, false, false, false, '');
+			
+			
+
+			$tbl = $this->load->view('call_center/help_texts', $data, true);
+			// $pdf->WriteHTML('<center><h6 class="red_text">رعایت این نکات در کلیه پروازها الزامی است</h6></center>', true, 0, true, 0, 'C');
+			$pdf->writeHTML($tbl, true, false, false, false, 'C');
+
+			$pdf->Ln();
+			$pdf->SetLineStyle(array('width' => 0.0, 'cap' => 'butt', 'join' => 'miter', 'dash' => 4, 'color' => array(255, 0, 0)));
+			$pdf->SetFillColor(255,255,128);
+			$pdf->SetTextColor(0,0,128);
+			$pdf->Ln();
+		
+			// START FOOTER
+			$footer_image_file = base_url() . 'assets/images/footer.png';
+			$footer_logo_html = '<img src="' . $footer_image_file . '" />';
+			$pdf->writeHTMLCell(690, 44, 8, 228, $footer_logo_html);
+			// END FOOTER
+		}
+		//Close and output PDF document
+		$id = 192831;
+		$data = $pdf->Output(APPPATH . '/ticket_'.$item_info->booking_id.'.pdf', 'F');
+		
+		// // Send SMS
+		// $phone = $item_info->contact;
+
+		// // Send Email
+		$this->load->model("Sendmail_model");
+		$email = $item_info->email;
+		$message = '<h3>سفر خوشي را براي شما آرزومنديم و از اینکه 10020  را برای سفر انتخاب نموده اید متشکریم.</h3>
+<p>بلیط شما ضمیمه این ایمیل گردیده است. پیشنهاد می کنیم همیشه چند ساعت قبل از پرواز، آخرین وضعیت پرواز شامل تاخیرهای احتمالی و شرایط آب و هوا را با شماره تلفن 199 اطلاعات فرودگاه بررسی نمایید.</p>
+<strong>رفرنس رزرو شما '.$item_info->booking_id.' می باشد.</strong>';
+		$access = $this->Email_model->get_access();
+		$subject = '10020.ir';
+		$email_from = $access->username;
+		unset($access);
+		$email_from_name = '10020.ir';
+		$sent = $this->Sendmail_model->send_mail($subject, $message, $email_from, $email_from_name, $email, null, [APPPATH . '/ticket_'.$item_info->booking_id.'.pdf']);
+		if ($sent) {
+			unlink(APPPATH . '/ticket_'.$item_info->booking_id.'.pdf');
+		}
+
+	}
+
+	function send_sms($data=array(), $booked = false)
+	{
+		if ($booked) {
+			$message = "فرخوشی برایتان آرزو میکنیم\n
+". $data['from'] ." - ". $data['to'] ."\n
+".  $data['flight_date']  ."\n
+".  $data['flight_time']  ."\n
+هواپیمایی: ".  $data['airline_name']  ."\n
+شماره واچر:".  $data['voucher']  ."\n
+پشتیبانی:02154623000";
+		}else{
+		$message = "پرواز مورد نظر با شماره پرواز(". $data['flight_number'] .") \n
+از: ". $data['from'] ." \n
+به: ". $data['to'] ." \n
+در تاریخ: ". $data['purchased_date'] ." \n
+ساعت: ". $data['purchased_time'] ." \n
+برای: ". $data['people_count'] ." \n
+با رفرنس: ". $data['booking_ref'] ." \n
+با موفقیت خریداری شد.\n
+در صورت داشتن سئوال با شماره 02154623000 تماس بگیرید.\n
+10020.ir" ;
+		}
+
+		$this->send_sms_msg($message, $data['contact']);
+	}
+
+	function send_sms_msg($msg='', $to='')
+	{
+		// return;
+		ini_set("soap.wsdl_cache_enabled", "0");
+		$client = new SoapClient( 'http://payamak-service.ir/SendService.svc?wsdl', array('encoding'=>'UTF-8'));
+		 //'http://payamak-service.ir/SendService.svc?singleWsdl' );
+		$result = $client->SendSMS( array( 'userName'       => 'jfathi',
+		                                   'password'       => '1002010020',
+		                                   'fromNumber'     => '2186030931', // '2186030931',// '50005346264',
+		                                   'toNumbers'      => [$to], // [/*'+972592105628'*/], '+989125047869',
+		                                   'messageContent' => $msg,
+		                                   'isflash' => false,
+		                                ) );
+		return isset($result->recId->long) ? 1 : 0;
+	}
+
+	function get_actual_text($code='THR', $lang="fa")
+	{
+		$airports = $this->general->get_airports($code,'', '1', $lang);
+		$first_found = $airports['results'] ? ($airports['results'][0] ? $airports['results'][0] : null) : null;
+		if ($first_found) {
+			$texts_found = preg_split( "/(,|،)/", $first_found->city_text );
+			
+			if (count($texts_found) > 0) {
+				$found_fa = false;
+				foreach ($texts_found as $key => $value) {
+					if (!preg_match('/[^A-Za-z0-9]/', $value)) {
+						continue;
+					}
+					$found_fa = true;
+					$city_name = $texts_found[$key];
+				}
+			}
+			if (!$found_fa) {
+				$city_name = $texts_found[0];
+			}
+
+			if (isset($city_name)) {
+				if (!preg_match('/[^A-Za-z0-9]/', $city_name)) {
+					return $this->get_actual_text($code, 'en');
+				}
+				return $city_name;
+			}
+		}
+		return $code;
+	}
+
+
+	function test2()
+	{
+		$this->load->helper('persian_date');
+		echo "<pre>";
+		print_r(to_date('2017/07/19', 'Y/m/d'));
+		// 1396/04/28
+		echo "</pre>";
+		die();
+		die;
+		$flight_number = '960';
+		$from = $this->get_actual_text('THR');
+		$to = $this->get_actual_text('MHD');
+		$purchased_date = '17/07/12';
+		$purchased_time = '03:30';
+		$people_count = '2 نفر';
+		$booking_ref = '1003';
+
+
+		$message = "پرواز مورد نظر با شماره پرواز(". $flight_number .") \n
+از: ". $from ." \n
+به: ". $to ." \n
+در تاریخ: ". $purchased_date ." \n
+ساعت: ". $purchased_time ." \n
+برای: ". $people_count ." \n
+با رفرنس: ". $booking_ref ." \n
+با موفقیت خریداری شد.\n
+در صورت داشتن سئوال با شماره 02154623000 تماس بگیرید.\n
+10020.ir" ;
+
+
+// 		$message = "پرواز مورد نظر با شماره پرواز(". $flight_number .") </br>
+// از: ". $from ." </br>
+// به: ". $to ." </br>
+// در تاریخ: ". $purchased_date ." </br>
+// ساعت: ". $purchased_time ." </br>
+// برای: ". $people_count ." </br>
+// با رفرنس: ". $booking_ref ." </br>
+// با موفقیت خریداری شد.</br>
+// در صورت داشتن سئوال با شماره 02154623000 تماس بگیرید.</br>
+// 10020.ir" ;
+
+		// $this->load->model("Sendmail_model");
+		// $email = 'abed.saidy@gmail.com';
+
+		// $access = $this->Email_model->get_access();
+		// $subject = '10020.ir';
+		// $email_from = $access->username;
+		// unset($access);
+		// $email_from_name = '10020.ir';
+		// $sent = $this->Sendmail_model->send_mail($subject, $message, $email_from, $email_from_name, $email, null);
+		// if ($sent) {
+		// 	echo "sent";
+		// 	// unlink(APPPATH . '/ticket_'.$item_info->booking_id.'.pdf');
+		// }else{
+		// 	echo "not sent";
+		// }
+		// die();
+		
+		
+		// $this->send_sms_msg($message, '+989212143313');
+		// die('done');
+		
+		
+		// ini_set("soap.wsdl_cache_enabled", "0");
+		// try {
+		// 	$client = new SoapClient( 'http://payamak-service.ir/SendService.svc?wsdl', array('encoding'=>'UTF-8'));
+		// 	// $credit = $client->GetCredit( array( 'userName' => 'jfathi', 'password' => '1002010020' ))->GetCreditResult;
+
+		// 	// $credit = $client->GetSenderNumbers( array( 'userName' => 'jfathi', 'password' => '1002010020' ));
+		// 	$credit = $client->GetMessages( array( 'userName' => 'jfathi', 'password' => '1002010020', 'messageType'=> 2, 'fromNumbers'=> ['2186030931', '50005346264'], 'index' => 0, 'count' => 100 ));
+
+
+		// } catch ( SoapFault $ex ) {
+		// 	// $credit = $ex->faultstring;
+		// }
+		// echo "<pre>";
+		// print_r($credit);
+		// echo "</pre>";
+		// die('done');
+	}
 }
