@@ -119,10 +119,10 @@ class Call_center extends CI_Controller {
 			$response = array("status" => "false", "msg_status" => "danger",  "msg" => "Not updated ".$book_id.".");
 			$updateData = array();
 			switch($book_status){
-				// case 0 : //pending
 				// 	$updateData['status'] = 1; //mark as new in callcenter
 				// 	$updateData['dt_new'] = date("Y-m-d H:i:s");
 				// 	break;
+				case 0 : //pending
 				case 1 : //reserved or payment success bookings 	
 
 					$input_json    = json_decode($value->input_json);
@@ -814,7 +814,7 @@ class Call_center extends CI_Controller {
 به: ". $data['to'] ." \n
 در تاریخ: ". $data['purchased_date'] ." \n
 ساعت: ". $data['purchased_time'] ." \n
-برای: ". $data['people_count'] ." \n
+برای: ". $data['people_count'] ." نفر \n
 با رفرنس: ". $data['booking_ref'] ." \n
 با موفقیت خریداری شد.\n
 در صورت داشتن سئوال با شماره 02154623000 تماس بگیرید.\n
